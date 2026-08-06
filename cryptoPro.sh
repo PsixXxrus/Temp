@@ -1,30 +1,31 @@
 #!/usr/bin/env bash
 
-# Полная проверка:
+# Проверка:
 #   CryptoPro CSP
-#   сертификат пользователя
+#   сертификат пользователя delta
 #   контейнер RuToken
 #   TSP через stunnel
 #   CAdES-X Long Type 1
 #
-# Запускать непосредственно от пользователя delta:
+# Запуск:
 #
 #   ./check-cryptopro.sh THUMBPRINT
 #
-# Либо:
+# Или:
 #
 #   ./check-cryptopro.sh THUMBPRINT TSP_URL
 #
-# Либо проверить подпись конкретного файла:
+# Или с конкретным файлом:
 #
-#   ./check-cryptopro.sh THUMBPRINT TSP_URL /путь/к/файлу
+#   ./check-cryptopro.sh THUMBPRINT TSP_URL INPUT_FILE
 #
-# Код возврата:
-#   0 — все проверки успешны
+# Коды возврата:
+#   0 — все проверки выполнены успешно
 #   1 — одна из проверок завершилась ошибкой
-#   2 — ошибка параметров запуска
+#   2 — неверные параметры запуска
 
-set -uo pipefail
+set -u
+set -o pipefail
 umask 077
 
 # ---------------------------------------------------------------------------
@@ -40,24 +41,46 @@ DEFAULT_TSP_URL="${
 # ГОСТ Р 34.11-2012, 256 бит
 TSP_HASH_OID="${TSP_HASH_OID:-1.2.643.7.1.1.2.2}"
 
-# Максимальное время одной сетевой/криптографической операции
+# Максимальное время одной операции
 TIMEOUT_SEC="${TIMEOUT_SEC:-180}"
 
+CURRENT_USER="$(id -un)"
+
+RUN_DIR=""
+LOG_FILE=""
+INPUT_FILE=""
+TSP_STAMP_FILE=""
+SIGNATURE_FILE=""
+
 # ---------------------------------------------------------------------------
-# Функции
+# Функции вывода
 # ---------------------------------------------------------------------------
+
+separator() {
+    printf '%s\n' \
+        '----------------------------------------------------------------'
+}
+
+wide_separator() {
+    printf '%s\n' \
+        '================================================================'
+}
+
+now() {
+    date '+%Y-%m-%dT%H:%M:%S%z'
+}
 
 usage() {
     cat <<EOF
 Использование:
 
-  $0 THUMBPRINT [TSP_URL] [ФАЙЛ]
+  $0 THUMBPRINT [TSP_URL] [INPUT_FILE]
 
 Пример:
 
   $0 '0123456789abcdef0123456789abcdef01234567'
 
-С явным адресом TSP:
+С явным TSP URL:
 
   $0 \\
     '0123456789abcdef0123456789abcdef01234567' \\
@@ -76,8 +99,13 @@ usage() {
   DEFAULT_TSP_URL=http://127.0.0.1:10001/tsp/tsp.srf
   TSP_HASH_OID=1.2.643.7.1.1.2.2
   TIMEOUT_SEC=180
+  STATE_DIR=/home/delta/.local/state/cryptopro-check
 EOF
 }
+
+# ---------------------------------------------------------------------------
+# Поиск утилит
+# ---------------------------------------------------------------------------
 
 resolve_binary() {
     local name="$1"
@@ -103,24 +131,37 @@ resolve_binary() {
     return 1
 }
 
-print_command() {
-    printf 'Команда:'
+# ---------------------------------------------------------------------------
+# Журналирование
+# ---------------------------------------------------------------------------
 
-    printf ' %q' "$@"
+log_command() {
+    local arg
 
-    printf '\n'
+    printf '%s' 'Команда:' >>"$LOG_FILE"
+
+    for arg in "$@"; do
+        printf ' %q' "$arg" >>"$LOG_FILE"
+    done
+
+    printf '\n' >>"$LOG_FILE"
 }
 
 run_capture() {
     local output_file="$1"
     shift
 
+    local rc
+
     {
-        printf '\n================================================================\n'
-        printf 'Время: %s\n' "$(date --iso-8601=seconds)"
-        print_command "$@"
-        printf '----------------------------------------------------------------\n'
+        printf '\n'
+        wide_separator
+        printf 'Время: %s\n' "$(now)"
     } >>"$LOG_FILE"
+
+    log_command "$@"
+
+    separator >>"$LOG_FILE"
 
     if "$TIMEOUT_BIN" \
         --signal=TERM \
@@ -129,72 +170,108 @@ run_capture() {
         "$@" \
         </dev/null >"$output_file" 2>&1
     then
-        local rc=0
+        rc=0
     else
-        local rc=$?
+        rc=$?
     fi
 
     cat "$output_file" >>"$LOG_FILE"
 
     {
         printf '\nКод завершения: %d\n' "$rc"
-        printf '================================================================\n'
+        wide_separator
     } >>"$LOG_FILE"
 
     return "$rc"
 }
 
+show_log_tail() {
+    if [[ -n "$LOG_FILE" && -f "$LOG_FILE" ]]; then
+        printf '\nПоследние 50 строк журнала:\n'
+        separator
+        tail -n 50 "$LOG_FILE"
+    fi
+}
+
 fail() {
     local reason="$1"
 
-    printf '\n'
-    printf '❌ ПРОВЕРКА НЕ ПРОЙДЕНА\n'
+    printf '\n[FAIL] ПРОВЕРКА НЕ ПРОЙДЕНА\n'
     printf 'Причина: %s\n' "$reason"
     printf 'Пользователь: %s\n' "$CURRENT_USER"
-    printf 'Рабочий каталог: %s\n' "$RUN_DIR"
-    printf 'Полный журнал: %s\n' "$LOG_FILE"
 
-    if [[ -f "$LOG_FILE" ]]; then
-        printf '\nПоследние 40 строк журнала:\n'
-        printf '%s\n' '----------------------------------------------------------------'
-        tail -n 40 "$LOG_FILE"
+    if [[ -n "$RUN_DIR" ]]; then
+        printf 'Каталог результатов: %s\n' "$RUN_DIR"
     fi
 
+    if [[ -n "$LOG_FILE" ]]; then
+        printf 'Полный журнал: %s\n' "$LOG_FILE"
+    fi
+
+    show_log_tail
     exit 1
 }
 
 success() {
     local signature_size
+    local tsp_size
 
     signature_size="$(stat -c '%s' "$SIGNATURE_FILE")"
+    tsp_size="$(stat -c '%s' "$TSP_STAMP_FILE")"
 
     {
         printf '\nРезультат: SUCCESS\n'
-        printf 'Время завершения: %s\n' "$(date --iso-8601=seconds)"
+        printf 'Время завершения: %s\n' "$(now)"
+        printf 'Размер TSP-штампа: %s байт\n' "$tsp_size"
         printf 'Размер подписи: %s байт\n' "$signature_size"
     } >>"$LOG_FILE"
 
-    printf '\n'
-    printf '✅ ПРОВЕРКА ПРОЙДЕНА УСПЕШНО\n'
-    printf '\n'
-    printf 'Пользователь:       %s\n' "$CURRENT_USER"
-    printf 'Сертификат:         %s\n' "$THUMBPRINT"
-    printf 'Контейнер:          Aktiv Rutoken ECP\n'
-    printf 'TSP URL:            %s\n' "$TSP_URL"
-    printf 'Формат подписи:     CAdES-X Long Type 1\n'
-    printf 'Размер подписи:     %s байт\n' "$signature_size"
-    printf '\n'
-    printf 'Тестовый файл:      %s\n' "$INPUT_FILE"
-    printf 'TSP-штамп:          %s\n' "$TSP_STAMP_FILE"
-    printf 'Файл подписи:       %s\n' "$SIGNATURE_FILE"
-    printf 'Полный журнал:      %s\n' "$LOG_FILE"
-    printf '\n'
+    printf '\n[OK] ПРОВЕРКА ПРОЙДЕНА УСПЕШНО\n'
+    printf 'Пользователь: %s\n' "$CURRENT_USER"
+    printf 'Сертификат: %s\n' "$THUMBPRINT"
+    printf 'Контейнер: Aktiv Rutoken ECP\n'
+    printf 'TSP URL: %s\n' "$TSP_URL"
+    printf 'Формат: CAdES-X Long Type 1\n'
+    printf 'Размер TSP-штампа: %s байт\n' "$tsp_size"
+    printf 'Размер подписи: %s байт\n' "$signature_size"
+    printf 'Исходный файл: %s\n' "$INPUT_FILE"
+    printf 'TSP-штамп: %s\n' "$TSP_STAMP_FILE"
+    printf 'Подпись: %s\n' "$SIGNATURE_FILE"
+    printf 'Журнал: %s\n' "$LOG_FILE"
 
     exit 0
 }
 
+is_timeout_rc() {
+    local rc="$1"
+
+    [[ "$rc" -eq 124 ||
+       "$rc" -eq 137 ||
+       "$rc" -eq 143 ]]
+}
+
+is_tsp_url_parse_error() {
+    local file="$1"
+
+    [[ -f "$file" ]] || return 1
+
+    grep -Eqi \
+        'URL of TSP service is not specified|URL службы TSP не указан|не указан.*URL.*TSP' \
+        "$file"
+}
+
+is_verify_arguments_error() {
+    local file="$1"
+
+    [[ -f "$file" ]] || return 1
+
+    grep -Eqi \
+        'Useless positional arguments|лишн.*позицион|too many arguments|неверн.*параметр' \
+        "$file"
+}
+
 # ---------------------------------------------------------------------------
-# Проверка параметров запуска
+# Параметры запуска
 # ---------------------------------------------------------------------------
 
 THUMBPRINT="${1:-}"
@@ -206,7 +283,13 @@ if [[ -z "$THUMBPRINT" ]]; then
     exit 2
 fi
 
-# Удаляем пробелы, двоеточия и переводы строк из отпечатка.
+if (( $# > 3 )); then
+    printf 'Ошибка: передано слишком много аргументов.\n'
+    usage
+    exit 2
+fi
+
+# Удаляем пробелы и двоеточия из отпечатка
 THUMBPRINT="$(
     printf '%s' "$THUMBPRINT" |
         tr -d '[:space:]:'
@@ -222,18 +305,24 @@ if [[ ! "$TSP_URL" =~ ^https?:// ]]; then
     exit 2
 fi
 
-if [[ ! "$TIMEOUT_SEC" =~ ^[0-9]+$ ]] || (( TIMEOUT_SEC < 1 )); then
-    printf 'Ошибка: TIMEOUT_SEC должен быть положительным числом.\n'
+if [[ ! "$TIMEOUT_SEC" =~ ^[0-9]+$ ]] ||
+   (( TIMEOUT_SEC < 1 ))
+then
+    printf 'Ошибка: TIMEOUT_SEC должен быть положительным целым числом.\n'
     exit 2
 fi
 
-CURRENT_USER="$(id -un)"
+# ---------------------------------------------------------------------------
+# Проверка пользователя
+# ---------------------------------------------------------------------------
 
 if [[ "$CURRENT_USER" != "$EXPECTED_USER" ]]; then
     printf 'Ошибка: скрипт запущен от пользователя "%s".\n' \
         "$CURRENT_USER"
+
     printf 'Запустите его непосредственно от пользователя "%s".\n' \
         "$EXPECTED_USER"
+
     exit 1
 fi
 
@@ -242,9 +331,12 @@ ACCOUNT_HOME="$(
         cut -d: -f6
 )"
 
-if [[ -z "$ACCOUNT_HOME" || ! -d "$ACCOUNT_HOME" ]]; then
+if [[ -z "$ACCOUNT_HOME" ||
+      ! -d "$ACCOUNT_HOME" ]]
+then
     printf 'Ошибка: домашний каталог пользователя %s не найден.\n' \
         "$CURRENT_USER"
+
     exit 1
 fi
 
@@ -252,11 +344,11 @@ export HOME="$ACCOUNT_HOME"
 export USER="$CURRENT_USER"
 export LOGNAME="$CURRENT_USER"
 
-# Исключаем ошибочное пользовательское переопределение сокета PC/SC.
+# Не используем случайно переопределённый сокет PC/SC
 unset PCSCLITE_CSOCK_NAME
 
 # ---------------------------------------------------------------------------
-# Поиск утилит
+# Поиск программ
 # ---------------------------------------------------------------------------
 
 CRYPTCP="$(resolve_binary cryptcp)" || {
@@ -279,76 +371,100 @@ TSPUTIL="$(resolve_binary tsputil)" || {
     exit 1
 }
 
-TIMEOUT_BIN="$(command -v timeout 2>/dev/null || true)"
+TIMEOUT_BIN="$(
+    command -v timeout 2>/dev/null ||
+        true
+)"
 
-if [[ -z "$TIMEOUT_BIN" || ! -x "$TIMEOUT_BIN" ]]; then
+if [[ -z "$TIMEOUT_BIN" ||
+      ! -x "$TIMEOUT_BIN" ]]
+then
     printf 'Ошибка: команда timeout не найдена.\n'
-    printf 'Она необходима, чтобы проверка не зависла при недоступном TSP или PIN.\n'
     exit 1
 fi
 
 # ---------------------------------------------------------------------------
-# Рабочий каталог
+# Каталог результатов
 # ---------------------------------------------------------------------------
 
-STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/cryptopro-check"
+STATE_DIR="${
+    STATE_DIR:-$HOME/.local/state/cryptopro-check
+}"
+
 RUN_ID="$(date '+%Y%m%d-%H%M%S')-$$"
 RUN_DIR="$STATE_DIR/$RUN_ID"
 
-mkdir -p "$RUN_DIR" || {
+if ! mkdir -p "$RUN_DIR"; then
     printf 'Ошибка: не удалось создать каталог %s\n' "$RUN_DIR"
     exit 1
-}
+fi
 
 chmod 700 "$STATE_DIR" "$RUN_DIR" 2>/dev/null || true
 
 LOG_FILE="$RUN_DIR/check.log"
+
 TSP_STAMP_FILE="$RUN_DIR/tsp-response.tsr"
 SIGNATURE_FILE="$RUN_DIR/signature.p7s"
 
 CERT_OUTPUT="$RUN_DIR/certificate-check.txt"
 CONTAINER_OUTPUT="$RUN_DIR/container-check.txt"
-CADES_HELP_OUTPUT="$RUN_DIR/cryptcp-help.txt"
+CADES_HELP_OUTPUT="$RUN_DIR/cryptcp-sign-help.txt"
 TSP_OUTPUT="$RUN_DIR/tsp-request.txt"
 TSP_INFO_OUTPUT="$RUN_DIR/tsp-info.txt"
-SIGN_OUTPUT="$RUN_DIR/sign.txt"
-SIGN_RETRY_OUTPUT="$RUN_DIR/sign-retry.txt"
+
+SIGN_OUTPUT_1="$RUN_DIR/sign-attempt-1.txt"
+SIGN_OUTPUT_2="$RUN_DIR/sign-attempt-2.txt"
+SIGN_OUTPUT_3="$RUN_DIR/sign-attempt-3.txt"
+
 VERIFY_OUTPUT="$RUN_DIR/verify.txt"
+VERIFY_FALLBACK_OUTPUT="$RUN_DIR/verify-fallback.txt"
+
+# ---------------------------------------------------------------------------
+# Исходный файл
+# ---------------------------------------------------------------------------
 
 if [[ -n "$SOURCE_FILE" ]]; then
     if [[ ! -f "$SOURCE_FILE" ]]; then
-        fail "Указанный файл не существует: $SOURCE_FILE"
+        fail "Указанный исходный файл не существует: $SOURCE_FILE"
     fi
 
     if [[ ! -r "$SOURCE_FILE" ]]; then
-        fail "Нет прав на чтение файла: $SOURCE_FILE"
+        fail "Нет прав на чтение исходного файла: $SOURCE_FILE"
     fi
 
     INPUT_FILE="$RUN_DIR/input-data"
 
-    cp -- "$SOURCE_FILE" "$INPUT_FILE" ||
-        fail "Не удалось скопировать исходный файл"
+    if ! cp -- "$SOURCE_FILE" "$INPUT_FILE"; then
+        fail 'Не удалось скопировать исходный файл в рабочий каталог'
+    fi
 else
     INPUT_FILE="$RUN_DIR/input-data.txt"
 
     {
         printf 'CryptoPro CAdES-X Long Type 1 test\n'
         printf 'User: %s\n' "$CURRENT_USER"
-        printf 'Timestamp: %s\n' "$(date --iso-8601=seconds)"
-        printf 'Random: %s-%s-%s\n' "$RANDOM" "$RANDOM" "$$"
+        printf 'Timestamp: %s\n' "$(now)"
+        printf 'Random: %s-%s-%s\n' \
+            "$RANDOM" \
+            "$RANDOM" \
+            "$$"
     } >"$INPUT_FILE"
 fi
 
+# ---------------------------------------------------------------------------
+# Заголовок журнала
+# ---------------------------------------------------------------------------
+
 {
     printf 'CryptoPro full check\n'
-    printf 'Started: %s\n' "$(date --iso-8601=seconds)"
-    printf 'User: %s\n' "$CURRENT_USER"
+    printf 'Начало: %s\n' "$(now)"
+    printf 'Пользователь: %s\n' "$CURRENT_USER"
     printf 'UID: %s\n' "$(id -u)"
     printf 'HOME: %s\n' "$HOME"
-    printf 'Thumbprint: %s\n' "$THUMBPRINT"
+    printf 'Отпечаток: %s\n' "$THUMBPRINT"
     printf 'TSP URL: %s\n' "$TSP_URL"
-    printf 'TSP hash OID: %s\n' "$TSP_HASH_OID"
-    printf 'Input file: %s\n' "$INPUT_FILE"
+    printf 'OID хэша TSP: %s\n' "$TSP_HASH_OID"
+    printf 'Исходный файл: %s\n' "$INPUT_FILE"
     printf 'cryptcp: %s\n' "$CRYPTCP"
     printf 'certmgr: %s\n' "$CERTMGR"
     printf 'csptest: %s\n' "$CSPTEST"
@@ -359,17 +475,19 @@ fi
 # 1. Проверка сертификата
 # ---------------------------------------------------------------------------
 
-printf '[1/7] Проверка сертификата в хранилище uMy...\n'
+printf '[1/7] Проверка сертификата в uMy...\n'
 
-if ! run_capture \
+run_capture \
     "$CERT_OUTPUT" \
     "$CERTMGR" \
     -list \
     -store uMy \
     -thumbprint "$THUMBPRINT"
-then
-    rc=$?
-    fail "certmgr завершился с ошибкой, код: $rc"
+
+rc=$?
+
+if (( rc != 0 )); then
+    fail "certmgr завершился с кодом $rc"
 fi
 
 THUMBPRINT_LOWER="$(
@@ -383,7 +501,7 @@ CERT_OUTPUT_NORMALIZED="$(
 )"
 
 if [[ "$CERT_OUTPUT_NORMALIZED" != *"$THUMBPRINT_LOWER"* ]]; then
-    fail "Сертификат с указанным отпечатком не найден в uMy"
+    fail 'Сертификат с указанным отпечатком не найден в uMy'
 fi
 
 # ---------------------------------------------------------------------------
@@ -392,69 +510,96 @@ fi
 
 printf '[2/7] Проверка контейнера RuToken...\n'
 
-if ! run_capture \
+run_capture \
     "$CONTAINER_OUTPUT" \
     "$CSPTEST" \
     -keyset \
     -enum_cont \
     -fqcn \
     -verifycontext
-then
-    rc=$?
-    fail "CryptoPro не смог перечислить контейнеры, код: $rc"
+
+rc=$?
+
+if (( rc != 0 )); then
+    fail "CryptoPro не смог перечислить контейнеры, код $rc"
 fi
 
-if ! grep -Fqi 'Aktiv Rutoken ECP' "$CONTAINER_OUTPUT"; then
-    fail "Контейнер Aktiv Rutoken ECP не найден"
+if ! grep -Fqi \
+    'Aktiv Rutoken ECP' \
+    "$CONTAINER_OUTPUT"
+then
+    fail 'Контейнер Aktiv Rutoken ECP не найден'
 fi
 
 # ---------------------------------------------------------------------------
-# 3. Проверка поддержки CAdES-X Long Type 1
+# 3. Проверка поддержки CAdES
 # ---------------------------------------------------------------------------
 
 printf '[3/7] Проверка поддержки CAdES-X Long Type 1...\n'
 
-"$CRYPTCP" -sign -help \
-    </dev/null >"$CADES_HELP_OUTPUT" 2>&1 || true
-
-cat "$CADES_HELP_OUTPUT" >>"$LOG_FILE"
-
-if ! grep -qi 'xlongtype1' "$CADES_HELP_OUTPUT"; then
-    fail "cryptcp не поддерживает -xlongtype1 либо не установлен CAdES Runtime"
+if "$CRYPTCP" \
+    -sign \
+    -help \
+    </dev/null >"$CADES_HELP_OUTPUT" 2>&1
+then
+    rc=0
+else
+    rc=$?
 fi
 
-if ! grep -qi 'cadestsa' "$CADES_HELP_OUTPUT"; then
-    fail "cryptcp не поддерживает параметр -cadesTSA"
+{
+    printf '\n'
+    wide_separator
+    printf 'Время: %s\n' "$(now)"
+    printf 'Команда: %q -sign -help\n' "$CRYPTCP"
+    separator
+    cat "$CADES_HELP_OUTPUT"
+    printf '\nКод завершения: %d\n' "$rc"
+    wide_separator
+} >>"$LOG_FILE"
+
+if ! grep -qi \
+    'xlongtype1' \
+    "$CADES_HELP_OUTPUT"
+then
+    fail 'cryptcp не сообщает поддержку параметра -xlongtype1'
+fi
+
+if ! grep -qi \
+    'cadestsa' \
+    "$CADES_HELP_OUTPUT"
+then
+    fail 'cryptcp не сообщает поддержку параметра -cadesTSA'
 fi
 
 # ---------------------------------------------------------------------------
-# 4. Получение и проверка TSP-штампа
+# 4. Проверка TSP через stunnel
 # ---------------------------------------------------------------------------
 
-printf '[4/7] Проверка TSP-службы через stunnel...\n'
+printf '[4/7] Получение TSP-штампа через stunnel...\n'
 
-if ! run_capture \
+run_capture \
     "$TSP_OUTPUT" \
     "$TSPUTIL" \
     ms \
-    --alg="$TSP_HASH_OID" \
-    --url="$TSP_URL" \
+    "--alg=$TSP_HASH_OID" \
+    "--url=$TSP_URL" \
     --cert-req \
-    --nonce=yes \
     "$INPUT_FILE" \
     "$TSP_STAMP_FILE"
-then
-    rc=$?
 
-    if [[ "$rc" -eq 124 || "$rc" -eq 137 ]]; then
-        fail "Истекло время ожидания ответа TSP: ${TIMEOUT_SEC} секунд"
-    fi
+rc=$?
 
-    fail "tsputil не смог получить или проверить TSP-штамп, код: $rc"
+if is_timeout_rc "$rc"; then
+    fail "Истекло время ожидания TSP: ${TIMEOUT_SEC} секунд"
+fi
+
+if (( rc != 0 )); then
+    fail "tsputil не смог получить или проверить TSP-штамп, код $rc"
 fi
 
 if [[ ! -s "$TSP_STAMP_FILE" ]]; then
-    fail "Файл TSP-штампа не создан или имеет нулевой размер"
+    fail 'Файл TSP-штампа не создан или имеет нулевой размер'
 fi
 
 # ---------------------------------------------------------------------------
@@ -463,14 +608,20 @@ fi
 
 printf '[5/7] Чтение информации из TSP-штампа...\n'
 
-if ! run_capture \
+run_capture \
     "$TSP_INFO_OUTPUT" \
     "$TSPUTIL" \
     si \
     "$TSP_STAMP_FILE"
-then
-    rc=$?
-    fail "tsputil не смог прочитать полученный TSP-штамп, код: $rc"
+
+rc=$?
+
+if is_timeout_rc "$rc"; then
+    fail 'Истекло время ожидания чтения TSP-штампа'
+fi
+
+if (( rc != 0 )); then
+    fail "tsputil не смог прочитать TSP-штамп, код $rc"
 fi
 
 # ---------------------------------------------------------------------------
@@ -481,14 +632,15 @@ printf '[6/7] Создание CAdES-X Long Type 1...\n'
 
 rm -f "$SIGNATURE_FILE"
 
+# Основной вариант синтаксиса
 run_capture \
-    "$SIGN_OUTPUT" \
+    "$SIGN_OUTPUT_1" \
     "$CRYPTCP" \
     -sign \
-    -uMy \
     -thumbprint "$THUMBPRINT" \
-    -der \
+    -cert \
     -detached \
+    -der \
     -xlongtype1 \
     -cadesTSA "$TSP_URL" \
     "$INPUT_FILE" \
@@ -496,29 +648,46 @@ run_capture \
 
 SIGN_RC=$?
 
-# Некоторые сборки cryptcp принимают URL только в объединённом виде:
-#
-#   -cadesTSAhttp://server/path
-#
-# Повторяем команду только при характерной ошибке парсинга URL.
+# Некоторые сборки принимают параметр только как -cadesTSA=URL
+if (( SIGN_RC != 0 )) &&
+   is_tsp_url_parse_error "$SIGN_OUTPUT_1"
+then
+    printf '      Повтор с параметром -cadesTSA=URL...\n'
 
-if [[ "$SIGN_RC" -ne 0 ]] &&
-    grep -Eqi \
-        'URL of TSP service is not specified|URL службы TSP не указан|не указан.*URL.*TSP' \
-        "$SIGN_OUTPUT"
+    rm -f "$SIGNATURE_FILE"
+
+    run_capture \
+        "$SIGN_OUTPUT_2" \
+        "$CRYPTCP" \
+        -sign \
+        -thumbprint "$THUMBPRINT" \
+        -cert \
+        -detached \
+        -der \
+        -xlongtype1 \
+        "-cadesTSA=$TSP_URL" \
+        "$INPUT_FILE" \
+        "$SIGNATURE_FILE"
+
+    SIGN_RC=$?
+fi
+
+# Резервный вариант для отдельных сборок
+if (( SIGN_RC != 0 )) &&
+   is_tsp_url_parse_error "$SIGN_OUTPUT_2"
 then
     printf '      Повтор с объединённым параметром -cadesTSAURL...\n'
 
     rm -f "$SIGNATURE_FILE"
 
     run_capture \
-        "$SIGN_RETRY_OUTPUT" \
+        "$SIGN_OUTPUT_3" \
         "$CRYPTCP" \
         -sign \
-        -uMy \
         -thumbprint "$THUMBPRINT" \
-        -der \
+        -cert \
         -detached \
+        -der \
         -xlongtype1 \
         "-cadesTSA${TSP_URL}" \
         "$INPUT_FILE" \
@@ -527,40 +696,67 @@ then
     SIGN_RC=$?
 fi
 
-if [[ "$SIGN_RC" -eq 124 || "$SIGN_RC" -eq 137 ]]; then
+if is_timeout_rc "$SIGN_RC"; then
     fail "Истекло время ожидания создания подписи: ${TIMEOUT_SEC} секунд"
 fi
 
-if [[ "$SIGN_RC" -ne 0 ]]; then
-    fail "cryptcp не смог создать подпись, код: $SIGN_RC"
+if (( SIGN_RC != 0 )); then
+    fail "cryptcp не смог создать CAdES-подпись, код $SIGN_RC"
 fi
 
 if [[ ! -s "$SIGNATURE_FILE" ]]; then
-    fail "cryptcp завершился без ошибки, но файл подписи отсутствует или пуст"
+    fail 'cryptcp завершился без ошибки, но файл подписи отсутствует или пуст'
 fi
 
 # ---------------------------------------------------------------------------
-# 7. Проверка CAdES-X Long Type 1
+# 7. Проверка созданной подписи
 # ---------------------------------------------------------------------------
 
 printf '[7/7] Проверка созданной CAdES-подписи...\n'
 
-if ! run_capture \
+run_capture \
     "$VERIFY_OUTPUT" \
     "$CRYPTCP" \
     -verify \
     -detached \
+    -verall \
     -xlongtype1 \
     "$INPUT_FILE" \
     "$SIGNATURE_FILE"
-then
-    rc=$?
 
-    if [[ "$rc" -eq 124 || "$rc" -eq 137 ]]; then
-        fail "Истекло время ожидания проверки подписи"
+VERIFY_RC=$?
+
+# Старые сборки могут искать подпись как input-data.sgn
+if (( VERIFY_RC != 0 )) &&
+   is_verify_arguments_error "$VERIFY_OUTPUT"
+then
+    printf '      Повтор проверки через стандартный файл .sgn...\n'
+
+    if ! cp -- \
+        "$SIGNATURE_FILE" \
+        "${INPUT_FILE}.sgn"
+    then
+        fail 'Не удалось подготовить подпись для резервного способа проверки'
     fi
 
-    fail "Созданная подпись не прошла проверку, код: $rc"
+    run_capture \
+        "$VERIFY_FALLBACK_OUTPUT" \
+        "$CRYPTCP" \
+        -verify \
+        -detached \
+        -verall \
+        -xlongtype1 \
+        "$INPUT_FILE"
+
+    VERIFY_RC=$?
+fi
+
+if is_timeout_rc "$VERIFY_RC"; then
+    fail 'Истекло время ожидания проверки CAdES-подписи'
+fi
+
+if (( VERIFY_RC != 0 )); then
+    fail "Созданная CAdES-подпись не прошла проверку, код $VERIFY_RC"
 fi
 
 success
