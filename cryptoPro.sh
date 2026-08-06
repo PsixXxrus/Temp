@@ -1,23 +1,10 @@
 #!/usr/bin/env bash
 
-# Проверка:
-#   CryptoPro CSP
-#   сертификат пользователя delta
-#   контейнер RuToken
-#   TSP через stunnel
-#   CAdES-X Long Type 1
+# Проверка CryptoPro CSP, RuToken, TSP через stunnel
+# и создание/проверка CAdES-X Long Type 1.
 #
-# Запуск:
-#
-#   ./check-cryptopro.sh THUMBPRINT
-#
-# Или:
-#
-#   ./check-cryptopro.sh THUMBPRINT TSP_URL
-#
-# Или с конкретным файлом:
-#
-#   ./check-cryptopro.sh THUMBPRINT TSP_URL INPUT_FILE
+# Запускать непосредственно от пользователя delta:
+#   ./check-cryptopro.sh THUMBPRINT [TSP_URL] [INPUT_FILE]
 #
 # Коды возврата:
 #   0 — все проверки выполнены успешно
@@ -33,15 +20,12 @@ umask 077
 # ---------------------------------------------------------------------------
 
 EXPECTED_USER="${EXPECTED_USER:-delta}"
-
-DEFAULT_TSP_URL="${
-    DEFAULT_TSP_URL:-http://127.0.0.1:10001/tsp/tsp.srf
-}"
+DEFAULT_TSP_URL="${DEFAULT_TSP_URL:-http://127.0.0.1:10001/tsp/tsp.srf}"
 
 # ГОСТ Р 34.11-2012, 256 бит
 TSP_HASH_OID="${TSP_HASH_OID:-1.2.643.7.1.1.2.2}"
 
-# Максимальное время одной операции
+# Максимальное время одной операции, секунды
 TIMEOUT_SEC="${TIMEOUT_SEC:-180}"
 
 CURRENT_USER="$(id -un)"
@@ -53,7 +37,7 @@ TSP_STAMP_FILE=""
 SIGNATURE_FILE=""
 
 # ---------------------------------------------------------------------------
-# Функции вывода
+# Вывод и справка
 # ---------------------------------------------------------------------------
 
 separator() {
@@ -71,7 +55,7 @@ now() {
 }
 
 usage() {
-    cat <<EOF
+    cat <<EOF_USAGE
 Использование:
 
   $0 THUMBPRINT [TSP_URL] [INPUT_FILE]
@@ -82,15 +66,15 @@ usage() {
 
 С явным TSP URL:
 
-  $0 \\
-    '0123456789abcdef0123456789abcdef01234567' \\
+  $0 \
+    '0123456789abcdef0123456789abcdef01234567' \
     'http://127.0.0.1:10001/tsp/tsp.srf'
 
 Проверка конкретного файла:
 
-  $0 \\
-    '0123456789abcdef0123456789abcdef01234567' \\
-    'http://127.0.0.1:10001/tsp/tsp.srf' \\
+  $0 \
+    '0123456789abcdef0123456789abcdef01234567' \
+    'http://127.0.0.1:10001/tsp/tsp.srf' \
     '/home/delta/data.txt'
 
 Переменные окружения:
@@ -100,7 +84,7 @@ usage() {
   TSP_HASH_OID=1.2.643.7.1.1.2.2
   TIMEOUT_SEC=180
   STATE_DIR=/home/delta/.local/state/cryptopro-check
-EOF
+EOF_USAGE
 }
 
 # ---------------------------------------------------------------------------
@@ -160,7 +144,6 @@ run_capture() {
     } >>"$LOG_FILE"
 
     log_command "$@"
-
     separator >>"$LOG_FILE"
 
     if "$TIMEOUT_BIN" \
@@ -289,7 +272,7 @@ if (( $# > 3 )); then
     exit 2
 fi
 
-# Удаляем пробелы и двоеточия из отпечатка
+# Удаляем пробелы и двоеточия из отпечатка.
 THUMBPRINT="$(
     printf '%s' "$THUMBPRINT" |
         tr -d '[:space:]:'
@@ -344,7 +327,7 @@ export HOME="$ACCOUNT_HOME"
 export USER="$CURRENT_USER"
 export LOGNAME="$CURRENT_USER"
 
-# Не используем случайно переопределённый сокет PC/SC
+# Не используем случайно переопределённый сокет PC/SC.
 unset PCSCLITE_CSOCK_NAME
 
 # ---------------------------------------------------------------------------
@@ -387,10 +370,7 @@ fi
 # Каталог результатов
 # ---------------------------------------------------------------------------
 
-STATE_DIR="${
-    STATE_DIR:-$HOME/.local/state/cryptopro-check
-}"
-
+STATE_DIR="${STATE_DIR:-$HOME/.local/state/cryptopro-check}"
 RUN_ID="$(date '+%Y%m%d-%H%M%S')-$$"
 RUN_DIR="$STATE_DIR/$RUN_ID"
 
@@ -632,11 +612,12 @@ printf '[6/7] Создание CAdES-X Long Type 1...\n'
 
 rm -f "$SIGNATURE_FILE"
 
-# Основной вариант синтаксиса
+# Основной вариант синтаксиса.
 run_capture \
     "$SIGN_OUTPUT_1" \
     "$CRYPTCP" \
     -sign \
+    -uMy \
     -thumbprint "$THUMBPRINT" \
     -cert \
     -detached \
@@ -648,7 +629,7 @@ run_capture \
 
 SIGN_RC=$?
 
-# Некоторые сборки принимают параметр только как -cadesTSA=URL
+# Некоторые сборки принимают параметр как -cadesTSA=URL.
 if (( SIGN_RC != 0 )) &&
    is_tsp_url_parse_error "$SIGN_OUTPUT_1"
 then
@@ -660,6 +641,7 @@ then
         "$SIGN_OUTPUT_2" \
         "$CRYPTCP" \
         -sign \
+        -uMy \
         -thumbprint "$THUMBPRINT" \
         -cert \
         -detached \
@@ -672,7 +654,7 @@ then
     SIGN_RC=$?
 fi
 
-# Резервный вариант для отдельных сборок
+# Резервный вариант для некоторых сборок.
 if (( SIGN_RC != 0 )) &&
    is_tsp_url_parse_error "$SIGN_OUTPUT_2"
 then
@@ -684,6 +666,7 @@ then
         "$SIGN_OUTPUT_3" \
         "$CRYPTCP" \
         -sign \
+        -uMy \
         -thumbprint "$THUMBPRINT" \
         -cert \
         -detached \
@@ -726,7 +709,7 @@ run_capture \
 
 VERIFY_RC=$?
 
-# Старые сборки могут искать подпись как input-data.sgn
+# Старые сборки могут искать подпись как input-data.sgn.
 if (( VERIFY_RC != 0 )) &&
    is_verify_arguments_error "$VERIFY_OUTPUT"
 then
