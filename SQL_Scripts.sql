@@ -3,7 +3,7 @@ SET SERVEROUTPUT ON SIZE UNLIMITED;
 DECLARE
     v_sql   VARCHAR2(32767);
     v_count NUMBER;
-    v_value VARCHAR2(4000) := 'HELLO WORLD!';
+    v_value VARCHAR2(4000) := 'WORLD';
 BEGIN
     FOR c IN (
         SELECT owner,
@@ -19,7 +19,6 @@ BEGIN
             'CLOB',
             'NCLOB'
         )
-        -- системные схемы обычно нет смысла проверять
         AND owner NOT IN (
             'SYS',
             'SYSTEM',
@@ -38,16 +37,18 @@ BEGIN
                 v_sql :=
                     'SELECT COUNT(*) FROM "' ||
                     REPLACE(c.owner, '"', '""') || '"."' ||
-                    REPLACE(c.table_name, '"', '""') || '" WHERE DBMS_LOB.COMPARE("' ||
+                    REPLACE(c.table_name, '"', '""') ||
+                    '" WHERE DBMS_LOB.INSTR("' ||
                     REPLACE(c.column_name, '"', '""') ||
-                    '", TO_CLOB(:1)) = 0';
+                    '", :1) > 0';
             ELSE
                 v_sql :=
                     'SELECT COUNT(*) FROM "' ||
                     REPLACE(c.owner, '"', '""') || '"."' ||
-                    REPLACE(c.table_name, '"', '""') || '" WHERE "' ||
+                    REPLACE(c.table_name, '"', '""') ||
+                    '" WHERE INSTR("' ||
                     REPLACE(c.column_name, '"', '""') ||
-                    '" = :1';
+                    '", :1) > 0';
             END IF;
 
             EXECUTE IMMEDIATE v_sql
@@ -66,8 +67,6 @@ BEGIN
 
         EXCEPTION
             WHEN OTHERS THEN
-                -- Некоторые таблицы могут быть недоступны или иметь
-                -- специфические ограничения. Просто продолжаем поиск.
                 NULL;
         END;
     END LOOP;
