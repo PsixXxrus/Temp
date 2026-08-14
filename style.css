@@ -1,0 +1,508 @@
+.auth-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    padding: 40px 0;
+
+    background:
+        radial-gradient(
+            circle at 10% 10%,
+            rgba(79, 70, 229, 0.12),
+            transparent 35%
+        ),
+        radial-gradient(
+            circle at 90% 90%,
+            rgba(14, 165, 233, 0.10),
+            transparent 35%
+        ),
+        #f5f7fb;
+}
+
+
+/* Основная карточка */
+
+.auth-card {
+    max-width: 1180px;
+    margin: 0 auto;
+
+    background: #ffffff;
+
+    border: 1px solid #e9edf5;
+    border-radius: 24px;
+
+    overflow: hidden;
+
+    box-shadow:
+        0 25px 60px rgba(15, 23, 42, 0.08),
+        0 4px 15px rgba(15, 23, 42, 0.04);
+}
+
+
+/* =========================================================
+   Левая часть
+   ========================================================= */
+
+.auth-info {
+    min-height: 680px;
+
+    position: relative;
+
+    display: flex;
+    flex-direction: column;
+
+    padding: 48px;
+
+    color: #ffffff;
+
+    background:
+        radial-gradient(
+            circle at 15% 20%,
+            rgba(255, 255, 255, 0.13),
+            transparent 30%
+        ),
+        radial-gradient(
+            circle at 90% 80%,
+            rgba(56, 189, 248, 0.18),
+            transparent 35%
+        ),
+        linear-gradient(
+            145deg,
+            #172554 0%,
+            #1e3a8a 45%,
+            #3730a3 100%
+        );
+}
+
+
+.auth-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    font-size: 17px;
+    font-weight: 600;
+}
+
+
+.auth-logo {
+    width: 42px;
+    height: 42px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: rgba(255, 255, 255, 0.14);
+
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 12px;
+
+    font-weight: 700;
+    font-size: 20px;
+
+    backdrop-filter: blur(10px);
+}
+
+
+.auth-info-content {
+    max-width: 570px;
+
+    margin-top: auto;
+    margin-bottom: auto;
+
+    padding: 60px 0;
+}
+
+
+.auth-badge {
+    display: inline-block;
+
+    margin-bottom: 18px;
+    padding: 7px 12px;
+
+    font-size: 12px;
+    font-weight: 600;
+
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+
+    color: #dbeafe;
+
+    background: rgba(255, 255, 255, 0.1);
+
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 50px;
+}
+
+
+.auth-info h1 {
+    margin-bottom: 20px;
+
+    font-size: clamp(36px, 4vw, 52px);
+    font-weight: 700;
+
+    line-height: 1.08;
+    letter-spacing: -0.035em;
+}
+
+
+.auth-description {
+    max-width: 520px;
+
+    margin-bottom: 38px;
+
+    color: rgba(255, 255, 255, 0.72);
+
+    font-size: 16px;
+    line-height: 1.7;
+}
+
+
+/* Возможности */
+
+.auth-features {
+    display: flex;
+    flex-direction: column;
+
+    gap: 20px;
+}
+
+
+.auth-feature {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+}
+
+
+.feature-icon {
+    width: 28px;
+    height: 28px;
+
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin-top: 1px;
+
+    color: #172554;
+    background: #ffffff;
+
+    border-radius: 50%;
+
+    font-size: 13px;
+    font-weight: 700;
+}
+
+
+.auth-feature strong {
+    display: block;
+
+    margin-bottom: 3px;
+
+    font-size: 14px;
+    font-weight: 600;
+}
+
+
+.auth-feature p {
+    margin: 0;
+
+    color: rgba(255, 255, 255, 0.6);
+
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+
+.auth-footer {
+    color: rgba(255, 255, 255, 0.45);
+
+    font-size: 12px;
+}
+
+
+/* =========================================================
+   Форма
+   ========================================================= */
+
+.login-panel {
+    min-height: 680px;
+
+    display: flex;
+    align-items: center;
+
+    padding: 60px 55px;
+
+    background: #ffffff;
+}
+
+
+.login-wrapper {
+    width: 100%;
+    max-width: 390px;
+
+    margin: 0 auto;
+}
+
+
+.login-header {
+    margin-bottom: 38px;
+}
+
+
+.login-label {
+    display: block;
+
+    margin-bottom: 10px;
+
+    color: #4f46e5;
+
+    font-size: 12px;
+    font-weight: 700;
+
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+
+.login-header h2 {
+    margin-bottom: 10px;
+
+    color: #0f172a;
+
+    font-size: 30px;
+    font-weight: 700;
+
+    letter-spacing: -0.025em;
+}
+
+
+.login-header p {
+    margin: 0;
+
+    color: #64748b;
+
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+
+/* Поля */
+
+.login-form .form-label {
+    margin-bottom: 8px;
+
+    color: #334155;
+
+    font-size: 13px;
+    font-weight: 600;
+}
+
+
+.auth-input {
+    min-height: 52px;
+
+    padding: 12px 15px;
+
+    color: #0f172a;
+
+    background: #ffffff;
+
+    border: 1px solid #dce3ed;
+    border-radius: 10px;
+
+    font-size: 14px;
+
+    box-shadow: none;
+
+    transition:
+        border-color 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+
+.auth-input::placeholder {
+    color: #a3afbf;
+}
+
+
+.auth-input:focus {
+    background: #ffffff;
+
+    border-color: #6366f1;
+
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.10);
+}
+
+
+/* Кнопка */
+
+.login-button {
+    width: 100%;
+    min-height: 52px;
+
+    margin-top: 5px;
+
+    border: none;
+    border-radius: 10px;
+
+    background: #4f46e5;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    box-shadow: 0 8px 20px rgba(79, 70, 229, 0.18);
+
+    transition:
+        transform 0.15s ease,
+        background-color 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+
+.login-button:hover {
+    background: #4338ca;
+
+    transform: translateY(-1px);
+
+    box-shadow: 0 12px 24px rgba(79, 70, 229, 0.22);
+}
+
+
+.login-button:active {
+    transform: translateY(0);
+}
+
+
+/* Ошибки */
+
+.login-error {
+    padding: 12px 14px;
+
+    border-radius: 10px;
+
+    font-size: 13px;
+}
+
+
+.validation-message {
+    display: block;
+
+    margin-top: 6px;
+
+    color: #dc2626;
+
+    font-size: 12px;
+}
+
+
+/* Нижняя подсказка */
+
+.login-help {
+    margin-top: 35px;
+
+    color: #94a3b8;
+
+    font-size: 12px;
+    line-height: 1.6;
+
+    text-align: center;
+}
+
+
+/* =========================================================
+   Адаптив
+   ========================================================= */
+
+@media (max-width: 991.98px) {
+
+    .auth-page {
+        align-items: flex-start;
+
+        padding: 20px 0;
+    }
+
+    .auth-card {
+        max-width: 650px;
+
+        border-radius: 18px;
+    }
+
+    .auth-info {
+        min-height: auto;
+
+        padding: 32px;
+    }
+
+    .auth-info-content {
+        margin: 0;
+
+        padding: 55px 0 20px;
+    }
+
+    .auth-info h1 {
+        font-size: 36px;
+    }
+
+    .auth-features {
+        display: none;
+    }
+
+    .auth-footer {
+        display: none;
+    }
+
+    .login-panel {
+        min-height: auto;
+
+        padding: 45px 32px;
+    }
+}
+
+
+@media (max-width: 575.98px) {
+
+    .auth-page {
+        padding: 0;
+
+        background: #ffffff;
+    }
+
+    .auth-page .container {
+        max-width: none;
+
+        padding: 0;
+    }
+
+    .auth-card {
+        border: none;
+        border-radius: 0;
+
+        box-shadow: none;
+    }
+
+    .auth-info {
+        padding: 25px 22px;
+    }
+
+    .auth-info-content {
+        padding: 35px 0 10px;
+    }
+
+    .auth-info h1 {
+        font-size: 30px;
+    }
+
+    .auth-description {
+        margin-bottom: 10px;
+
+        font-size: 14px;
+    }
+
+    .login-panel {
+        padding: 40px 22px;
+    }
+}
