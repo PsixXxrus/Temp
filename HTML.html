@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Инструкция по установке приложения BBNG (СНГБ Онлайн Бизнес) на устройства Apple.">
+  <title>Установка BBNG — СНГБ Онлайн Бизнес</title>
+  <style>
+    :root {
+      --bg: #f5f7f9;
+      --surface: #ffffff;
+      --text: #1f2933;
+      --muted: #687785;
+      --line: #dce3e8;
+      --blue: #0875b8;
+      --blue-dark: #075985;
+      --blue-soft: #eaf6fc;
+      --orange: #e98132;
+      --shadow: 0 10px 28px rgba(31, 41, 51, 0.08);
+      --radius: 16px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      line-height: 1.65;
+    }
+
+    a {
+      color: var(--blue-dark);
+      text-underline-offset: 3px;
+    }
+
+    .page {
+      width: min(920px, calc(100% - 32px));
+      margin: 40px auto;
+    }
+
+    article {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .hero {
+      padding: 48px 56px 36px;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(180deg, #ffffff 0%, #f8fcff 100%);
+    }
+
+    .eyebrow {
+      margin: 0 0 10px;
+      color: var(--blue);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(30px, 5vw, 46px);
+      line-height: 1.12;
+      letter-spacing: -0.03em;
+    }
+
+    .lead {
+      margin: 18px 0 0;
+      max-width: 760px;
+      color: var(--muted);
+      font-size: 18px;
+    }
+
+    .content {
+      padding: 36px 56px 56px;
+    }
+
+    .notice {
+      margin: 0 0 34px;
+      padding: 18px 20px;
+      border-left: 4px solid var(--orange);
+      border-radius: 10px;
+      background: #fff7ef;
+    }
+
+    .notice strong { color: #9a4c14; }
+
+    .step {
+      padding: 8px 0 30px;
+      border-bottom: 1px solid var(--line);
+      scroll-margin-top: 24px;
+    }
+
+    .step + .step { padding-top: 30px; }
+    .step:last-child { border-bottom: 0; padding-bottom: 0; }
+
+    .step-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 0 0 12px;
+      font-size: 25px;
+      line-height: 1.25;
+    }
+
+    .step-number {
+      display: inline-grid;
+      place-items: center;
+      width: 38px;
+      height: 38px;
+      flex: 0 0 38px;
+      border-radius: 50%;
+      background: var(--blue);
+      color: #fff;
+      font-size: 16px;
+      font-weight: 800;
+    }
+
+    .step p { margin: 10px 0; }
+
+    .meta {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .email-box {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 9px 12px;
+      border-radius: 9px;
+      background: var(--blue-soft);
+      color: var(--blue-dark);
+      font-weight: 700;
+    }
+
+    figure {
+      margin: 22px 0 4px;
+    }
+
+    .image-placeholder {
+      display: grid;
+      min-height: 220px;
+      place-items: center;
+      padding: 24px;
+      border: 2px dashed #b7c7d2;
+      border-radius: 12px;
+      background: #f8fafb;
+      color: #72818d;
+      text-align: center;
+    }
+
+    .image-placeholder strong {
+      display: block;
+      margin-bottom: 5px;
+      color: #41515e;
+      font-size: 16px;
+    }
+
+    figcaption {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .source-link {
+      display: inline-block;
+      margin-top: 3px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 12px;
+      overflow-wrap: anywhere;
+    }
+
+    .checklist {
+      margin: 14px 0 0;
+      padding-left: 20px;
+    }
+
+    .checklist li + li { margin-top: 5px; }
+
+    .footer-note {
+      margin-top: 34px;
+      padding-top: 24px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    code {
+      padding: 2px 5px;
+      border-radius: 5px;
+      background: #eef3f6;
+      font-size: .9em;
+    }
+
+    @media (max-width: 680px) {
+      .page { width: min(100% - 20px, 920px); margin: 10px auto; }
+      .hero { padding: 32px 24px 26px; }
+      .content { padding: 28px 24px 36px; }
+      .lead { font-size: 16px; }
+      .step-title { font-size: 21px; }
+      .image-placeholder { min-height: 170px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <article>
+      <header class="hero">
+        <p class="eyebrow">Сургутнефтегазбанк · инструкция</p>
+        <h1>Установка приложения BBNG<br>(СНГБ Онлайн Бизнес)</h1>
+        <p class="lead">Пошаговая инструкция для установки приложения на iPhone или iPad через приглашение Apple и TestFlight.</p>
+      </header>
+
+      <div class="content">
+        <aside class="notice">
+          <strong>Перед началом.</strong> Для получения доступа к скачиванию приложения необходимо передать Банку адрес электронной почты, к которому привязан Apple ID устройства. Если адрес уже известен, можно сразу перейти к <a href="#step-4">пункту 4</a>.
+        </aside>
+
+        <section class="step" id="step-1">
+          <h2 class="step-title"><span class="step-number">1</span>Откройте настройки устройства</h2>
+          <p>На iPhone или iPad, где планируется установить BBNG, откройте приложение «Настройки».</p>
+
+          <figure>
+            <div class="image-placeholder">
+              <div><strong>Изображение: приложение «Настройки»</strong>Здесь можно разместить скриншот из инструкции.</div>
+            </div>
+            <figcaption>Заглушка ссылки: <a class="source-link" href="IMAGE_URL_01">IMAGE_URL_01</a></figcaption>
+          </figure>
+        </section>
+
+        <section class="step" id="step-2">
+          <h2 class="step-title"><span class="step-number">2</span>Откройте учётную запись Apple</h2>
+          <p>В настройках устройства нажмите на учётную запись. В этом разделе отображается информация об устройстве и привязанной к нему учётной записи.</p>
+          <p class="meta">В этой же вкладке можно изменить пароль учётной записи Apple, если он забыт.</p>
+
+          <figure>
+            <div class="image-placeholder">
+              <div><strong>Изображение: учётная запись в настройках</strong>Скриншот экрана с именем пользователя / Apple ID.</div>
+            </div>
+            <figcaption>Заглушка ссылки: <a class="source-link" href="IMAGE_URL_02">IMAGE_URL_02</a></figcaption>
+          </figure>
+        </section>
+
+        <section class="step" id="step-3">
+          <h2 class="step-title"><span class="step-number">3</span>Определите адрес электронной почты</h2>
+          <p>Банку необходимо предоставить адрес электронной почты, к которому привязано устройство Apple. На этот адрес будет направлено приглашение со ссылкой для скачивания BBNG.</p>
+
+          <figure>
+            <div class="image-placeholder">
+              <div><strong>Изображение: адрес Apple ID</strong>Скриншот раздела учётной записи с электронной почтой.</div>
+            </div>
+            <figcaption>Заглушка ссылки: <a class="source-link" href="IMAGE_URL_03">IMAGE_URL_03</a></figcaption>
+          </figure>
+        </section>
+
+        <section class="step" id="step-4">
+          <h2 class="step-title"><span class="step-number">4</span>Отправьте адрес электронной почты в Банк</h2>
+          <p>Направьте адрес электронной почты, привязанный к Apple ID, на электронную почту Банка:</p>
+          <div class="email-box">dbo@sngb.ru</div>
+          <p>Не позднее двух рабочих дней, следующих за датой предоставления адреса, Банк направит приглашение. Для принятия приглашения перейдите по ссылке <strong>Accept invitation</strong>.</p>
+
+          <figure>
+            <div class="image-placeholder">
+              <div><strong>Изображение: письмо в Банк</strong>Пример сообщения с адресом электронной почты.</div>
+            </div>
+            <figcaption>Заглушка ссылки: <a class="source-link" href="IMAGE_URL_04">IMAGE_URL_04</a></figcaption>
+          </figure>
+
+          <figure>
+            <div class="image-placeholder">
+              <div><strong>Изображение: приглашение App Store Connect</strong>Пример письма с кнопкой или ссылкой Accept invitation.</div>
+            </div>
+            <figcaption>Заглушка ссылки: <a class="source-link" href="IMAGE_URL_05">IMAGE_URL_05</a></figcaption>
+          </figure>
+        </section>
+
+        <section class="step" id="step-5">
+          <h2 class="step-title"><span class="step-number">5</span>Авторизуйтесь в Apple</h2>
+          <p>После перехода по ссылке <strong>Accept invitation</strong> войдите с помощью своей учётной записи Apple: укажите адрес электронной почты и пароль.</p>
+          <aside class="notice">
+            <strong>Важно:</strong> пароль учётной записи Apple может отличаться от пароля электронной почты.
+          </aside>
+          <p>После ввода данных пройдите двухфакторную аутентификацию, затем разрешите доверять браузеру, нажав кнопку «Доверять».</p>
+
+          <figure>
+            <div class="image-placeholder">
+              <div><strong>Изображение: вход в App Store Connect</strong>Форма ввода адреса электронной почты и пароля.</div>
+            </div>
+            <figcaption>Заглушка ссылки: <a class="source-link" href="IMAGE_URL_06">IMAGE_URL_06</a></figcaption>
+          </figure>
+
+          <figure>
+            <div class="image-placeholder">
+              <div><strong>Изображение: двухфакторная аутентификация</strong>Экран ввода проверочного кода.</div>
+            </div>
+            <figcaption>Заглушка ссылки: <a class="source-link" href="IMAGE_URL_07">IMAGE_URL_07</a></figcaption>
+          </figure>
+
+          <figure>
+            <div class="image-placeholder">
+              <div><strong>Изображение: доверие браузеру</strong>Диалог с кнопкой «Доверять».</div>
+            </div>
+            <figcaption>Заглушка ссылки: <a class="source-link" href="IMAGE_URL_08">IMAGE_URL_08</a></figcaption>
+          </figure>
+        </section>
+
+        <section class="step" id="step-6">
+          <h2 class="step-title"><span class="step-number">6</span>Примите условия обслуживания</h2>
+          <p>Для вступления в группу пользователей установите отметку в поле «Условия обслуживания мною прочитаны и приняты» и нажмите кнопку «Принять».</p>
+
+          <figure>
+            <div class="image-placeholder">
+              <div><strong>Изображение: условия обслуживания</strong>Экран App Store Connect с чекбоксом и кнопкой «Принять».</div>
+            </div>
+            <figcaption>Заглушка ссылки: <a class="source-link" href="IMAGE_URL_09">IMAGE_URL_09</a></figcaption>
+          </figure>
+        </section>
+
+        <section class="step" id="step-7">
+          <h2 class="step-title"><span class="step-number">7</span>Установите TestFlight</h2>
+          <p>Для установки BBNG необходимо скачать приложение <strong>TestFlight</strong> из App Store.</p>
+          <p class="meta">Обратите внимание на производителя приложения: в инструкции указано, что производителем должен быть <strong>Apple</strong>.</p>
+
+          <figure>
+            <div class="image-placeholder">
+              <div><strong>Изображение: TestFlight в App Store</strong>Карточка приложения TestFlight.</div>
+            </div>
+            <figcaption>Заглушка ссылки: <a class="source-link" href="IMAGE_URL_10">IMAGE_URL_10</a></figcaption>
+          </figure>
+        </section>
+
+        <section class="step" id="step-8">
+          <h2 class="step-title"><span class="step-number">8</span>Дождитесь приглашения в TestFlight</h2>
+          <p>Далее необходимо ожидать поступления на электронную почту уведомления с приглашением к использованию приложения BBNG. В исходной инструкции указано, что уведомление должно прийти не позднее рабочего дня.</p>
+
+          <figure>
+            <div class="image-placeholder">
+              <div><strong>Изображение: приглашение BBNG в TestFlight</strong>Пример письма с кнопкой перехода в TestFlight.</div>
+            </div>
+            <figcaption>Заглушка ссылки: <a class="source-link" href="IMAGE_URL_11">IMAGE_URL_11</a></figcaption>
+          </figure>
+        </section>
+
+        <section class="step" id="step-9">
+          <h2 class="step-title"><span class="step-number">9</span>Установите BBNG</h2>
+          <p>Перейдите по ссылке из приглашения. После перехода будет предложена установка приложения BBNG (СНГБ Онлайн Бизнес).</p>
+
+          <figure>
+            <div class="image-placeholder">
+              <div><strong>Изображение: установка BBNG</strong>Экран TestFlight с кнопкой «Установить».</div>
+            </div>
+            <figcaption>Заглушка ссылки: <a class="source-link" href="IMAGE_URL_12">IMAGE_URL_12</a></figcaption>
+          </figure>
+        </section>
+
+        <div class="footer-note">
+          <strong>Как заменить заглушки:</strong> найдите в HTML значения <code>IMAGE_URL_01</code> … <code>IMAGE_URL_12</code> и замените их на реальные ссылки на изображения.
+        </div>
+      </div>
+    </article>
+  </main>
+</body>
+</html>
