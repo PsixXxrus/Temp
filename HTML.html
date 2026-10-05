@@ -1,1385 +1,374 @@
-/* =========================================================
-   PayControl: добавление и настройка ключа
-   Дополнение к общему style.css для BBNG / PayControl
-   ========================================================= */
-
-.cst_panel_title {
-  margin: 0 0 14px;
-  color: var(--cst_ink);
-  font-size: clamp(21px, 3vw, 27px);
-  line-height: 1.25;
-  letter-spacing: -.015em;
-}
-
-.cst_intro_text {
-  display: grid;
-  gap: 12px;
-}
-
-.cst_intro_text p {
-  margin: 0;
-  color: #33455a;
-}
-
-.cst_intro_text strong {
-  color: var(--cst_primary_dark);
-}
-
-
-/* ---------------------------------------------------------
-   Список магазинов приложений
-   --------------------------------------------------------- */
-
-.cst_store_list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin: 14px 0 0;
-  padding: 0;
-  list-style: none;
-}
-
-.cst_store_item {
-  display: inline-flex;
-  align-items: center;
-  min-height: 34px;
-  padding: 7px 12px;
-  border: 1px solid #c8dded;
-  border-radius: 999px;
-  background: var(--cst_primary_soft);
-  color: var(--cst_primary_dark);
-  font-size: 14px;
-  font-weight: 700;
-}
-
-
-/* ---------------------------------------------------------
-   Вложенные действия внутри одного шага
-   --------------------------------------------------------- */
-
-.cst_substeps {
-  display: grid;
-  gap: 9px;
-  margin: 15px 0 0;
-  padding: 0;
-  list-style: none;
-  counter-reset: cst_substep;
-}
-
-.cst_substep {
-  position: relative;
-  min-height: 42px;
-  padding: 10px 14px 10px 44px;
-  border: 1px solid var(--cst_line);
-  border-radius: 12px;
-  background: var(--cst_surface_soft);
-  color: #33455a;
-}
-
-.cst_substep::before {
-  counter-increment: cst_substep;
-  content: counter(cst_substep);
-  position: absolute;
-  top: 9px;
-  left: 10px;
-  display: grid;
-  place-items: center;
-  width: 24px;
-  height: 24px;
-  border-radius: 7px;
-  background: var(--cst_primary_soft);
-  color: var(--cst_primary_dark);
-  font-size: 12px;
-  font-weight: 800;
-}
-
-
-/* ---------------------------------------------------------
-   Информационный блок
-   --------------------------------------------------------- */
-
-.cst_notice_info {
-  border: 1px solid #c8dded;
-  background: var(--cst_primary_soft);
-  color: #294c69;
-}
-
-.cst_notice_info strong {
-  color: var(--cst_primary_dark);
-}
-
-
-/* ---------------------------------------------------------
-   Скриншоты мобильных приложений
-   --------------------------------------------------------- */
-
-.cst_phone_grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 320px));
-  gap: 18px;
-  justify-content: start;
-  align-items: start;
-  margin-top: 18px;
-}
-
-.cst_phone_figure {
-  width: 100%;
-  max-width: 320px;
-  margin: 0;
-}
-
-.cst_phone_figure .cst_image_frame {
-  display: grid;
-  min-height: 0;
-  place-items: center;
-  padding: 8px;
-}
-
-.cst_phone_figure .cst_img {
-  max-height: 600px;
-  object-fit: contain;
-}
-
-.cst_icon_figure {
-  width: 100%;
-  max-width: 180px;
-  margin: 18px 0 0;
-}
-
-.cst_icon_figure .cst_image_frame {
-  display: grid;
-  min-height: 0;
-  place-items: center;
-  padding: 16px;
-}
-
-.cst_icon_figure .cst_img {
-  width: 100%;
-  max-width: 130px;
-}
-
-.cst_caption_center {
-  text-align: center;
-}
-
-
-/* ---------------------------------------------------------
-   Разделитель между двумя вариантами добавления ключа
-   --------------------------------------------------------- */
-
-.cst_method_header {
-  position: relative;
-  margin-top: 42px;
-}
-
-.cst_method_header::before {
-  content: "";
-  position: absolute;
-  top: -22px;
-  right: 0;
-  left: 0;
-  height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    var(--cst_line) 10%,
-    var(--cst_line) 90%,
-    transparent
-  );
-}
-
-
-/* ---------------------------------------------------------
-   Акцентный текст
-   --------------------------------------------------------- */
-
-.cst_security_text {
-  font-weight: 700;
-  color: var(--cst_danger);
-}
-
-.cst_key_name_example {
-  display: inline-block;
-  margin: 4px 0;
-  padding: 3px 7px;
-  border-radius: 6px;
-  background: var(--cst_primary_soft);
-  color: var(--cst_primary_dark);
-  font-weight: 700;
-}
-
-
-/* ---------------------------------------------------------
-   Адаптивность
-   --------------------------------------------------------- */
-
-@media (max-width: 760px) {
-  .cst_phone_grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
-  }
-
-  .cst_phone_figure {
-    max-width: none;
-  }
-
-  .cst_phone_figure .cst_img {
-    max-height: 520px;
-  }
-}
-
-@media (max-width: 560px) {
-  .cst_phone_grid {
-    grid-template-columns: 1fr;
-  }
-
-  .cst_phone_figure {
-    max-width: 320px;
-  }
-
-  .cst_store_list {
-    gap: 6px;
-  }
-
-  .cst_store_item {
-    font-size: 13px;
-  }
-}
-
-@media print {
-  .cst_phone_figure,
-  .cst_icon_figure {
-    break-inside: avoid;
-  }
-
-  .cst_method_header::before {
-    background: var(--cst_line);
-  }
-}
-
-<!doctype html>
-<html lang="ru">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  <title>PayControl в «СНГБ Онлайн Бизнес»</title>
-
-  <link rel="stylesheet" href="style.css">
-</head>
-
-<body>
-
-<main class="cst_page cst_page_paycontrol_keys">
+<main class="cst_page">
   <article class="cst_document">
 
-    <!-- =====================================================
-         Заголовок
-         ===================================================== -->
-
     <header class="cst_hero">
-
       <p class="cst_eyebrow">
-        СНГБ Онлайн Бизнес · PayControl
+        СНГБ Онлайн Бизнес · уведомление
       </p>
 
       <h1 class="cst_title">
-        Работа с PayControl<br>
-        в «СНГБ Онлайн Бизнес»
+        Технические работы
       </h1>
 
       <p class="cst_lead">
-        Инструкция по добавлению и настройке ключа PayControl
-        в отдельном приложении PayControl и в мобильном приложении
-        «СНГБ Онлайн Бизнес».
+        4 октября 2026 года будут проводиться технические работы.
       </p>
-
     </header>
-
 
     <div class="cst_content">
 
-      <!-- ===================================================
-           Введение
-           =================================================== -->
-
       <section class="cst_panel">
 
+        <div class="cst_notice cst_notice_warning">
+          <strong>Время проведения работ:</strong>
+          04.10.2026 с 07:00 до 10:00 по московскому времени.
+        </div>
+
         <h2 class="cst_panel_title">
-          Введение
+          Технические работы 04.10.2026
         </h2>
 
-        <div class="cst_intro_text">
+        <p>
+          Уважаемые клиенты!
+        </p>
 
-          <p>
-            Система дистанционного банковского обслуживания
-            (далее – ДБО) «СНГБ Онлайн Бизнес» для малого и среднего
-            бизнеса (далее - система) предназначена для передачи
-            от клиента в банк и обратно платежных и иных документов
-            по электронным каналам связи.
-          </p>
-
-          <p>
-            Документ рекомендуется использовать и в качестве
-            ознакомительного материала, и в качестве справочника
-            при работе с системой. Документ рекомендован как для
-            последовательного, так и для выборочного чтения.
-          </p>
-
-          <p>
-            Предполагается наличие у пользователя базовых знаний
-            в области банковского обслуживания и банковской документации.
-          </p>
-
-          <p>
-            Предполагается также, что пользователь обладает практическими
-            навыками работы с приложениями в операционной системе Mac OS
-            и / или Windows, включая работу в сети Интернет
-            с использованием веб-браузеров.
-          </p>
-
-          <p>
-            <strong>PayControl</strong> — программный комплекс,
-            предназначенный для подтверждения пользователем операций
-            в системах дистанционного банковского обслуживания
-            и/или формирования подписи в системах электронного
-            документооборота.
-          </p>
-
-        </div>
+        <p>
+          4 октября 2026 года в период с
+          <strong>07:00 до 10:00 по московскому времени</strong>
+          будут проводиться технические работы.
+        </p>
 
       </section>
-
-
-      <!-- ===================================================
-           Раздел 1
-           =================================================== -->
-
-      <section
-        class="cst_section"
-        aria-labelledby="cst-paycontrol-app-title"
-      >
-
-        <div class="cst_section_heading">
-
-          <div class="cst_section_num">
-            1
-          </div>
-
-          <h2
-            class="cst_section_title"
-            id="cst-paycontrol-app-title"
-          >
-            Ключ в приложении PayControl
-          </h2>
-
-        </div>
-
-
-        <div class="cst_notice cst_notice_info">
-
-          <strong>Вариант 1.</strong>
-
-          Ключ PayControl добавляется и используется
-          в отдельном мобильном приложении PayControl.
-
-        </div>
-
-
-        <div class="cst_steps">
-
-          <!-- Шаг 1 -->
-
-          <article class="cst_step" id="cst-paycontrol-step-1">
-
-            <div class="cst_step_badge">
-              1
-            </div>
-
-            <div>
-
-              <h3 class="cst_step_title">
-                Установите приложение PayControl
-              </h3>
-
-              <p>
-                Необходимо загрузить приложение «PayControl»
-                на мобильное устройство из:
-              </p>
-
-              <ul class="cst_store_list">
-                <li class="cst_store_item">AppStore</li>
-                <li class="cst_store_item">RuStore</li>
-                <li class="cst_store_item">Google play</li>
-              </ul>
-
-              <ol class="cst_substeps">
-
-                <li class="cst_substep">
-                  В зависимости от вашего устройства зайдите
-                  в один из указанных источников для скачивания приложения.
-                </li>
-
-                <li class="cst_substep">
-                  В поисковой строке введите:
-                  <strong>«PayControl»</strong>.
-                </li>
-
-                <li class="cst_substep">
-                  Найдите приложение от разработчика:
-                  <strong>«SafeTech»</strong>.
-                </li>
-
-                <li class="cst_substep">
-                  Используйте кнопку «Установить», либо «Скачать».
-                  Для загрузки приложения на устройство.
-                </li>
-
-              </ol>
-
-              <figure class="cst_icon_figure">
-
-                <div class="cst_image_frame">
-                  <img
-                    class="cst_img"
-                    src="images/paycontrol/image1.png"
-                    alt="Иконка приложения PayControl"
-                  >
-                </div>
-
-                <figcaption class="cst_caption cst_caption_center">
-                  Рис. 2.1. Иконка приложения PayControl.
-                </figcaption>
-
-              </figure>
-
-            </div>
-
-          </article>
-
-
-          <!-- Шаг 2 -->
-
-          <article class="cst_step" id="cst-paycontrol-step-2">
-
-            <div class="cst_step_badge">
-              2
-            </div>
-
-            <div>
-
-              <h3 class="cst_step_title">
-                Откройте PayControl
-              </h3>
-
-              <p>
-                Когда приложение будет установлено – откройте его.
-              </p>
-
-            </div>
-
-          </article>
-
-
-          <!-- Шаг 3 -->
-
-          <article class="cst_step" id="cst-paycontrol-step-3">
-
-            <div class="cst_step_badge">
-              3
-            </div>
-
-            <div>
-
-              <h3 class="cst_step_title">
-                Разрешите отправку уведомлений
-              </h3>
-
-              <p>
-                При первом запуске откроется информационное окно
-                о разрешении на отправку уведомлений.
-              </p>
-
-              <ul class="cst_substeps">
-
-                <li class="cst_substep">
-                  Для получений уведомлений об операциях разрешите
-                  приложению отправлять уведомления.
-                  Используйте кнопку «Разрешить».
-                </li>
-
-                <li class="cst_substep">
-                  Если вы нажали на «Не разрешать», то в настройках
-                  устройства найдите приложение и измените настройка
-                  для отправки уведомлений.
-                </li>
-
-              </ul>
-
-              <figure class="cst_phone_figure cst_figure">
-
-                <div class="cst_image_frame">
-                  <img
-                    class="cst_img"
-                    src="images/paycontrol/image2.png"
-                    alt="Запрос PayControl на разрешение отправки уведомлений"
-                  >
-                </div>
-
-                <figcaption class="cst_caption cst_caption_center">
-                  Рис. 2.2. Разрешение на отправку уведомлений.
-                </figcaption>
-
-              </figure>
-
-            </div>
-
-          </article>
-
-
-          <!-- Шаг 4 -->
-
-          <article class="cst_step" id="cst-paycontrol-step-4">
-
-            <div class="cst_step_badge">
-              4
-            </div>
-
-            <div>
-
-              <h3 class="cst_step_title">
-                Перейдите к сканированию QR-кода
-              </h3>
-
-              <p>
-                Для добавления ключа в приложение используйте
-                кнопку «Сканировать QR» или кнопку «QR»
-                в левом верхнем углу экрана.
-              </p>
-
-              <figure class="cst_phone_figure cst_figure">
-
-                <div class="cst_image_frame">
-                  <img
-                    class="cst_img"
-                    src="images/paycontrol/image3.png"
-                    alt="Экран PayControl с кнопкой Сканировать QR"
-                  >
-                </div>
-
-                <figcaption class="cst_caption cst_caption_center">
-                  Рис. 2.3. Сканирование QR-кода в PayControl.
-                </figcaption>
-
-              </figure>
-
-            </div>
-
-          </article>
-
-
-          <!-- Шаг 5 -->
-
-          <article class="cst_step" id="cst-paycontrol-step-5">
-
-            <div class="cst_step_badge">
-              5
-            </div>
-
-            <div>
-
-              <h3 class="cst_step_title">
-                Подготовьте QR-код ключа
-              </h3>
-
-              <p>
-                Найдите QR-код, который Вам предоставил Банк
-                для добавления ключа PayControl.
-              </p>
-
-              <aside class="cst_notice cst_notice_warning">
-
-                <strong>Обратите внимание:</strong>
-
-                ключ будет привязан к устройству, на котором
-                вы выполняете вышеперечисленные действия.
-
-              </aside>
-
-            </div>
-
-          </article>
-
-
-          <!-- Шаг 6 -->
-
-          <article class="cst_step" id="cst-paycontrol-step-6">
-
-            <div class="cst_step_badge">
-              6
-            </div>
-
-            <div>
-
-              <h3 class="cst_step_title">
-                Отсканируйте QR-код
-              </h3>
-
-              <p>
-                Приложение может потребовать доступ к камере
-                устройства для сканирования QR-кода.
-                Разрешите использование камеры.
-              </p>
-
-              <p>
-                Либо вы можете загрузить изображение QR-кода
-                из галереи устройства, используйте кнопку сверху
-                справа «4 квадрата» для открытия галереи.
-                Отсканируйте/загрузите QR-код.
-              </p>
-
-              <div class="cst_phone_grid">
-
-                <figure class="cst_phone_figure">
-
-                  <div class="cst_image_frame">
-                    <img
-                      class="cst_img"
-                      src="images/paycontrol/image4.png"
-                      alt="Запрос PayControl на доступ к камере"
-                    >
-                  </div>
-
-                  <figcaption class="cst_caption cst_caption_center">
-                    Рис. 2.4. Разрешение на использование камеры.
-                  </figcaption>
-
-                </figure>
-
-
-                <figure class="cst_phone_figure">
-
-                  <div class="cst_image_frame">
-                    <img
-                      class="cst_img"
-                      src="images/paycontrol/image5.png"
-                      alt="Экран сканирования QR-кода в PayControl"
-                    >
-                  </div>
-
-                  <figcaption class="cst_caption cst_caption_center">
-                    Рис. 2.5. Сканирование или загрузка QR-кода.
-                  </figcaption>
-
-                </figure>
-
-              </div>
-
-            </div>
-
-          </article>
-
-
-          <!-- Шаг 7 -->
-
-          <article class="cst_step" id="cst-paycontrol-step-7">
-
-            <div class="cst_step_badge">
-              7
-            </div>
-
-            <div>
-
-              <h3 class="cst_step_title">
-                Укажите название ключа
-              </h3>
-
-              <p>
-                После сканирования QR-код нужно указать название ключа
-                (желательно использовать то название, которое будет
-                отображать назначение ключа).
-              </p>
-
-              <p>
-                На рисунке указано
-                <span class="cst_key_name_example">
-                  НАЗВАНИЕ ОРГАНИЗАЦИИ
-                </span>
-                как пример, что название ключа — это любой текст,
-                который можете указать самостоятельно.
-                После нажмите на кнопку «Далее» для перехода
-                к следующему этапу.
-              </p>
-
-              <figure class="cst_phone_figure cst_figure">
-
-                <div class="cst_image_frame">
-                  <img
-                    class="cst_img"
-                    src="images/paycontrol/image6.png"
-                    alt="Экран задания имени ключа PayControl"
-                  >
-                </div>
-
-                <figcaption class="cst_caption cst_caption_center">
-                  Рис. 2.6. Название ключа.
-                </figcaption>
-
-              </figure>
-
-            </div>
-
-          </article>
-
-
-          <!-- Шаг 8 -->
-
-          <article class="cst_step" id="cst-paycontrol-step-8">
-
-            <div class="cst_step_badge">
-              8
-            </div>
-
-            <div>
-
-              <h3 class="cst_step_title">
-                Задайте пароль для ключа
-              </h3>
-
-              <p>
-                В следующем этапе необходимо задать пароль
-                для использования ключа. Это необходимо
-                для безопасности использования ключа.
-              </p>
-
-              <aside class="cst_notice cst_notice_warning">
-
-                <strong>Рекомендация по безопасности:</strong>
-
-                Мы не рекомендуем использовать лёгкие пароли,
-                либо не использовать ключ без пароля.
-
-              </aside>
-
-              <p>
-                Введите и подтвердите пароль.
-                После нажмите на кнопку «Далее» для перехода
-                к следующему этапу.
-                Если пароли совпадают вы увидите уведомление «Готово».
-              </p>
-
-              <div class="cst_phone_grid">
-
-                <figure class="cst_phone_figure">
-
-                  <div class="cst_image_frame">
-                    <img
-                      class="cst_img"
-                      src="images/paycontrol/image7.png"
-                      alt="Экран задания пароля для ключа PayControl"
-                    >
-                  </div>
-
-                  <figcaption class="cst_caption cst_caption_center">
-                    Рис. 2.7. Задание пароля.
-                  </figcaption>
-
-                </figure>
-
-
-                <figure class="cst_phone_figure">
-
-                  <div class="cst_image_frame">
-                    <img
-                      class="cst_img"
-                      src="images/paycontrol/image8.png"
-                      alt="Уведомление Готово в приложении PayControl"
-                    >
-                  </div>
-
-                  <figcaption class="cst_caption cst_caption_center">
-                    Рис. 2.8. Завершение настройки пароля.
-                  </figcaption>
-
-                </figure>
-
-              </div>
-
-            </div>
-
-          </article>
-
-
-          <!-- Шаг 9 -->
-
-          <article
-            class="cst_step cst_step_success"
-            id="cst-paycontrol-step-9"
-          >
-
-            <div class="cst_step_badge">
-              9
-            </div>
-
-            <div>
-
-              <h3 class="cst_step_title">
-                Сгенерируйте данные для работы подписи
-              </h3>
-
-              <p>
-                После настройки ключа требуется сгенерировать данные
-                для работы подписи, для этого необходимо при появлении
-                окна как на рис 2.9 нажимать на экран устройства
-                в случайном порядке до заполнения шкалы
-                (ниже текста «Нажимайте для генерации случайных данных»).
-              </p>
-
-              <p>
-                После заполнения шкалы ключ будет отображаться
-                на главном экране в приложении PayControl.
-              </p>
-
-              <div class="cst_phone_grid">
-
-                <figure class="cst_phone_figure">
-
-                  <div class="cst_image_frame">
-                    <img
-                      class="cst_img"
-                      src="images/paycontrol/image9.png"
-                      alt="Генерация случайных данных для ключа PayControl"
-                    >
-                  </div>
-
-                  <figcaption class="cst_caption cst_caption_center">
-                    Рис. 2.9. Генерация случайных данных.
-                  </figcaption>
-
-                </figure>
-
-
-                <figure class="cst_phone_figure">
-
-                  <div class="cst_image_frame">
-                    <img
-                      class="cst_img"
-                      src="images/paycontrol/image10.png"
-                      alt="Готовый ключ на главном экране PayControl"
-                    >
-                  </div>
-
-                  <figcaption class="cst_caption cst_caption_center">
-                    Рис. 2.10. Ключ PayControl на главном экране.
-                  </figcaption>
-
-                </figure>
-
-              </div>
-
-            </div>
-
-          </article>
-
-        </div>
-
-
-        <aside class="cst_notice cst_notice_info cst_section">
-
-          <strong>Примечание:</strong>
-
-          ключ «PayControl» может использоваться для прохождения
-          двухфакторной аутентификации, подписания документа
-          отправляемого в банк. Любые операции, требующие подтверждения
-          могут быть обработы с использованием ключа «PayControl».
-
-        </aside>
-
-      </section>
-
-
-      <!-- ===================================================
-           Раздел 2
-           =================================================== -->
-
-      <section
-        class="cst_section cst_method_header"
-        aria-labelledby="cst-sngb-app-title"
-      >
-
-        <div class="cst_section_heading">
-
-          <div class="cst_section_num">
-            2
-          </div>
-
-          <h2
-            class="cst_section_title"
-            id="cst-sngb-app-title"
-          >
-            Ключ в мобильном приложении «СНГБ Онлайн Бизнес»
-          </h2>
-
-        </div>
-
-
-        <div class="cst_notice cst_notice_info">
-
-          <strong>Вариант 2.</strong>
-
-          Ключ PayControl добавляется непосредственно
-          в мобильном приложении «СНГБ Онлайн Бизнес».
-
-        </div>
-
-
-        <div class="cst_steps">
-
-          <!-- Шаг 1 -->
-
-          <article class="cst_step" id="cst-sngb-step-1">
-
-            <div class="cst_step_badge">
-              1
-            </div>
-
-            <div>
-
-              <h3 class="cst_step_title">
-                Запустите мобильное приложение
-              </h3>
-
-              <p>
-                Запустите установленное мобильное приложение
-                «СНГБ Онлайн Бизнес».
-              </p>
-
-            </div>
-
-          </article>
-
-
-          <!-- Шаг 2 -->
-
-          <article class="cst_step" id="cst-sngb-step-2">
-
-            <div class="cst_step_badge">
-              2
-            </div>
-
-            <div>
-
-              <h3 class="cst_step_title">
-                Авторизуйтесь
-              </h3>
-
-              <p>
-                Авторизуйтесь под пользователем организации.
-              </p>
-
-            </div>
-
-          </article>
-
-
-          <!-- Шаг 3 -->
-
-          <article class="cst_step" id="cst-sngb-step-3">
-
-            <div class="cst_step_badge">
-              3
-            </div>
-
-            <div>
-
-              <h3 class="cst_step_title">
-                Перейдите к управлению ключами PayControl
-              </h3>
-
-              <p>
-                Перейдите в меню для управления ключами PayControl.
-              </p>
-
-              <div class="cst_phone_grid">
-
-                <figure class="cst_phone_figure">
-
-                  <div class="cst_image_frame">
-                    <img
-                      class="cst_img"
-                      src="images/paycontrol/image11.png"
-                      alt="Меню мобильного приложения СНГБ Онлайн Бизнес"
-                    >
-                  </div>
-
-                  <figcaption class="cst_caption cst_caption_center">
-                    Рис. 3.1. Меню приложения.
-                  </figcaption>
-
-                </figure>
-
-
-                <figure class="cst_phone_figure">
-
-                  <div class="cst_image_frame">
-                    <img
-                      class="cst_img"
-                      src="images/paycontrol/image12.png"
-                      alt="Раздел PayControl в мобильном приложении СНГБ Онлайн Бизнес"
-                    >
-                  </div>
-
-                  <figcaption class="cst_caption cst_caption_center">
-                    Рис. 3.2. Раздел PayControl.
-                  </figcaption>
-
-                </figure>
-
-              </div>
-
-            </div>
-
-          </article>
-
-
-          <!-- Шаг 4 -->
-
-          <article class="cst_step" id="cst-sngb-step-4">
-
-            <div class="cst_step_badge">
-              4
-            </div>
-
-            <div>
-
-              <h3 class="cst_step_title">
-                Добавьте новый ключ
-              </h3>
-
-              <p>
-                Нажмите на кнопку «Добавить ключ»
-                и «Сканировать QR» для добавления нового ключа PayControl.
-              </p>
-
-              <div class="cst_phone_grid">
-
-                <figure class="cst_phone_figure">
-
-                  <div class="cst_image_frame">
-                    <img
-                      class="cst_img"
-                      src="images/paycontrol/image13.png"
-                      alt="Кнопка Добавить ключ в СНГБ Онлайн Бизнес"
-                    >
-                  </div>
-
-                  <figcaption class="cst_caption cst_caption_center">
-                    Рис. 3.3. Добавление ключа.
-                  </figcaption>
-
-                </figure>
-
-
-                <figure class="cst_phone_figure">
-
-                  <div class="cst_image_frame">
-                    <img
-                      class="cst_img"
-                      src="images/paycontrol/image14.png"
-                      alt="Сканирование QR-кода для добавления ключа PayControl"
-                    >
-                  </div>
-
-                  <figcaption class="cst_caption cst_caption_center">
-                    Рис. 3.4. Сканирование QR-кода.
-                  </figcaption>
-
-                </figure>
-
-              </div>
-
-            </div>
-
-          </article>
-
-
-          <!-- Шаг 5 -->
-
-          <article class="cst_step" id="cst-sngb-step-5">
-
-            <div class="cst_step_badge">
-              5
-            </div>
-
-            <div>
-
-              <h3 class="cst_step_title">
-                Отсканируйте QR-код
-              </h3>
-
-              <p>
-                Отсканируйте QR-код выданный Банком.
-                Если потребуется, то разрешите приложению
-                использовать камеру мобильного устройства.
-              </p>
-
-            </div>
-
-          </article>
-
-
-          <!-- Шаг 6 -->
-
-          <article class="cst_step" id="cst-sngb-step-6">
-
-            <div class="cst_step_badge">
-              6
-            </div>
-
-            <div>
-
-              <h3 class="cst_step_title">
-                Введите код активации
-              </h3>
-
-              <p>
-                После сканирования QR-кода необходимо ввести
-                код активации ключа PayControl в поле
-                «Введите код активации».
-              </p>
-
-              <p class="cst_meta">
-                Код активации был отправлен на мобильное устройство
-                ранее, когда был создан ключ.
-              </p>
-
-              <figure class="cst_phone_figure cst_figure">
-
-                <div class="cst_image_frame">
-                  <img
-                    class="cst_img"
-                    src="images/paycontrol/image15.png"
-                    alt="Поле ввода кода активации ключа PayControl"
-                  >
-                </div>
-
-                <figcaption class="cst_caption cst_caption_center">
-                  Рис. 3.5. Ввод кода активации.
-                </figcaption>
-
-              </figure>
-
-            </div>
-
-          </article>
-
-
-          <!-- Шаг 7 -->
-
-          <article class="cst_step" id="cst-sngb-step-7">
-
-            <div class="cst_step_badge">
-              7
-            </div>
-
-            <div>
-
-              <h3 class="cst_step_title">
-                Подтвердите информацию и сгенерируйте данные
-              </h3>
-
-              <p>
-                После ввода кода появиться информации о ключе PayControl.
-                Нажмите на кнопку «Продолжить».
-              </p>
-
-              <p>
-                После откроется окно по генерации случайных данных,
-                в этом окне необходимо нажимать в случайные точки
-                на экране, а полоса сверху будет заполняться.
-                Дождитесь полного заполнения полосы сверху экрана,
-                нажимай на экран устройства.
-              </p>
-
-              <div class="cst_phone_grid">
-
-                <figure class="cst_phone_figure">
-
-                  <div class="cst_image_frame">
-                    <img
-                      class="cst_img"
-                      src="images/paycontrol/image16.png"
-                      alt="Информация о добавляемом ключе PayControl"
-                    >
-                  </div>
-
-                  <figcaption class="cst_caption cst_caption_center">
-                    Рис. 3.6. Информация о ключе.
-                  </figcaption>
-
-                </figure>
-
-
-                <figure class="cst_phone_figure">
-
-                  <div class="cst_image_frame">
-                    <img
-                      class="cst_img"
-                      src="images/paycontrol/image17.png"
-                      alt="Генерация случайных данных в СНГБ Онлайн Бизнес"
-                    >
-                  </div>
-
-                  <figcaption class="cst_caption cst_caption_center">
-                    Рис. 3.7. Генерация случайных данных.
-                  </figcaption>
-
-                </figure>
-
-              </div>
-
-            </div>
-
-          </article>
-
-
-          <!-- Шаг 8 -->
-
-          <article class="cst_step" id="cst-sngb-step-8">
-
-            <div class="cst_step_badge">
-              8
-            </div>
-
-            <div>
-
-              <h3 class="cst_step_title">
-                Выберите защиту и задайте название ключа
-              </h3>
-
-              <p>
-                Когда полоса сверху заполнится полностью,
-                то появится окно с выбором средства защиты ключа
-                и название ключа.
-              </p>
-
-              <aside class="cst_notice cst_notice_warning">
-
-                <strong>Рекомендация по безопасности:</strong>
-
-                Мы не рекомендуем использовать лёгкие пароли,
-                либо не использовать ключ без пароля.
-
-              </aside>
-
-              <p>
-                <span class="cst_key_name_example">
-                  ООО «Тестируем вместе»
-                </span>
-                как пример, что название ключа — это любой текст,
-                который можете указать самостоятельно.
-              </p>
-
-              <div class="cst_phone_grid">
-
-                <figure class="cst_phone_figure">
-
-                  <div class="cst_image_frame">
-                    <img
-                      class="cst_img"
-                      src="images/paycontrol/image18.png"
-                      alt="Выбор средства защиты ключа PayControl"
-                    >
-                  </div>
-
-                  <figcaption class="cst_caption cst_caption_center">
-                    Рис. 3.8. Выбор средства защиты ключа.
-                  </figcaption>
-
-                </figure>
-
-
-                <figure class="cst_phone_figure">
-
-                  <div class="cst_image_frame">
-                    <img
-                      class="cst_img"
-                      src="images/paycontrol/image19.png"
-                      alt="Задание названия ключа PayControl"
-                    >
-                  </div>
-
-                  <figcaption class="cst_caption cst_caption_center">
-                    Рис. 3.9. Название ключа.
-                  </figcaption>
-
-                </figure>
-
-              </div>
-
-            </div>
-
-          </article>
-
-
-          <!-- Шаг 9 -->
-
-          <article
-            class="cst_step cst_step_success"
-            id="cst-sngb-step-9"
-          >
-
-            <div class="cst_step_badge">
-              9
-            </div>
-
-            <div>
-
-              <h3 class="cst_step_title">
-                Ключ готов к использованию
-              </h3>
-
-              <p>
-                Все этапы выполнены, и вы можете использовать свой ключ.
-              </p>
-
-              <figure class="cst_phone_figure cst_figure">
-
-                <div class="cst_image_frame">
-                  <img
-                    class="cst_img"
-                    src="images/paycontrol/image20.png"
-                    alt="Готовый ключ PayControl в мобильном приложении СНГБ Онлайн Бизнес"
-                  >
-                </div>
-
-                <figcaption class="cst_caption cst_caption_center">
-                  Рис. 3.10. Добавленный ключ PayControl.
-                </figcaption>
-
-              </figure>
-
-            </div>
-
-          </article>
-
-        </div>
-
-      </section>
-
-
-      <!-- ===================================================
-           Конец инструкции
-           =================================================== -->
-
-      <div class="cst_footer">
-        «СНГБ Онлайн Бизнес» · PayControl
-      </div>
 
     </div>
 
   </article>
 </main>
 
-</body>
-</html>
+/* =========================================================
+   Новость — технические работы
+   Все стили изолированы внутри .cst_page
+   ========================================================= */
+
+.cst_page {
+  --cst_bg: #f3f7fb;
+  --cst_surface: #ffffff;
+  --cst_surface_soft: #f8fbfe;
+
+  --cst_ink: #172333;
+  --cst_muted: #607083;
+  --cst_line: #dce7f1;
+
+  --cst_primary: #0b66b2;
+  --cst_primary_dark: #07477d;
+
+  --cst_warning: #8f5f00;
+  --cst_warning_bg: #fff8e8;
+  --cst_warning_line: #f1d99b;
+
+  --cst_shadow: 0 16px 42px rgba(22, 58, 91, 0.08);
+  --cst_radius: 18px;
+
+  width: min(1000px, calc(100% - 32px));
+  margin: 32px auto 64px;
+
+  color: var(--cst_ink);
+  font-family:
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Arial,
+    sans-serif;
+
+  font-size: 16px;
+  line-height: 1.58;
+
+  -webkit-font-smoothing: antialiased;
+}
+
+
+/* =========================================================
+   Основной контейнер
+   ========================================================= */
+
+.cst_page .cst_document {
+  margin: 0;
+}
+
+
+/* =========================================================
+   Шапка
+   ========================================================= */
+
+.cst_page .cst_hero {
+  position: relative;
+  overflow: hidden;
+
+  padding: clamp(28px, 5vw, 54px);
+
+  border-radius: 26px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #0a5da2,
+      #0b76bf 58%,
+      #1584c6
+    );
+
+  color: #ffffff;
+
+  box-shadow:
+    0 24px 65px rgba(5, 74, 126, 0.22);
+}
+
+
+.cst_page .cst_hero::after {
+  content: "";
+
+  position: absolute;
+  top: -170px;
+  right: -130px;
+
+  width: 360px;
+  height: 360px;
+
+  border-radius: 50%;
+
+  background: rgba(255, 255, 255, 0.08);
+
+  pointer-events: none;
+}
+
+
+/* =========================================================
+   Надпись над заголовком
+   ========================================================= */
+
+.cst_page .cst_eyebrow {
+  position: relative;
+  z-index: 1;
+
+  display: inline-flex;
+  align-items: center;
+
+  margin: 0;
+  padding: 7px 11px;
+
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 999px;
+
+  background: rgba(255, 255, 255, 0.10);
+
+  color: #ffffff;
+
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+
+/* =========================================================
+   Заголовок новости
+   ========================================================= */
+
+.cst_page .cst_title {
+  position: relative;
+  z-index: 1;
+
+  max-width: 820px;
+
+  margin: 18px 0 12px;
+
+  color: #ffffff;
+
+  font-size: clamp(30px, 5vw, 52px);
+  font-weight: 750;
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+}
+
+
+/* =========================================================
+   Подзаголовок
+   ========================================================= */
+
+.cst_page .cst_lead {
+  position: relative;
+  z-index: 1;
+
+  max-width: 790px;
+
+  margin: 0;
+
+  color: rgba(255, 255, 255, 0.88);
+
+  font-size: 17px;
+  line-height: 1.6;
+}
+
+
+/* =========================================================
+   Основное содержимое
+   ========================================================= */
+
+.cst_page .cst_content {
+  margin-top: 28px;
+}
+
+
+/* =========================================================
+   Белая карточка
+   ========================================================= */
+
+.cst_page .cst_panel {
+  padding: clamp(20px, 3vw, 30px);
+
+  border: 1px solid var(--cst_line);
+  border-radius: var(--cst_radius);
+
+  background: var(--cst_surface);
+
+  box-shadow: var(--cst_shadow);
+}
+
+
+.cst_page .cst_panel > :first-child {
+  margin-top: 0;
+}
+
+
+.cst_page .cst_panel > :last-child {
+  margin-bottom: 0;
+}
+
+
+.cst_page .cst_panel p {
+  margin: 14px 0;
+
+  color: #33455a;
+}
+
+
+/* =========================================================
+   Заголовок внутри карточки
+   ========================================================= */
+
+.cst_page .cst_panel_title {
+  margin: 0 0 16px;
+
+  color: var(--cst_ink);
+
+  font-size: clamp(22px, 3vw, 28px);
+  font-weight: 750;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+
+
+/* =========================================================
+   Информационное предупреждение
+   ========================================================= */
+
+.cst_page .cst_notice {
+  margin: 0 0 24px;
+  padding: 16px 18px;
+
+  border-radius: 14px;
+
+  line-height: 1.55;
+}
+
+
+.cst_page .cst_notice_warning {
+  border: 1px solid var(--cst_warning_line);
+
+  background: var(--cst_warning_bg);
+
+  color: #5d480f;
+}
+
+
+.cst_page .cst_notice_warning strong {
+  color: var(--cst_warning);
+}
+
+
+/* =========================================================
+   Выделения текста
+   ========================================================= */
+
+.cst_page .cst_panel strong {
+  font-weight: 750;
+}
+
+
+/* =========================================================
+   Адаптивность
+   ========================================================= */
+
+@media (max-width: 760px) {
+
+  .cst_page {
+    width: min(100% - 20px, 1000px);
+    margin-top: 12px;
+    margin-bottom: 40px;
+  }
+
+  .cst_page .cst_hero {
+    padding: 30px 24px;
+    border-radius: 18px;
+  }
+
+  .cst_page .cst_title {
+    font-size: clamp(28px, 8vw, 40px);
+  }
+
+  .cst_page .cst_lead {
+    font-size: 16px;
+  }
+
+}
+
+
+@media (max-width: 440px) {
+
+  .cst_page .cst_hero {
+    padding: 26px 20px;
+  }
+
+  .cst_page .cst_panel {
+    padding: 20px;
+  }
+
+  .cst_page .cst_notice {
+    padding: 14px 15px;
+  }
+
+}
+
+
+/* =========================================================
+   Печать
+   ========================================================= */
+
+@media print {
+
+  .cst_page {
+    width: 100%;
+    margin: 0;
+  }
+
+  .cst_page .cst_hero,
+  .cst_page .cst_panel {
+    box-shadow: none;
+  }
+
+  .cst_page .cst_hero {
+    border-radius: 0;
+  }
+
+}
