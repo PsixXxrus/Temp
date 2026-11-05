@@ -1,5 +1,31 @@
 
 using System;
+using Apache.NMS.ActiveMQ;
+
+Console.WriteLine("Apache.NMS: " +
+    typeof(Apache.NMS.IConnection).Assembly.GetName().Version);
+
+Console.WriteLine("Apache.NMS.ActiveMQ: " +
+    typeof(ConnectionFactory).Assembly.GetName().Version);
+
+try
+{
+    var factory = new ConnectionFactory(
+        "tcp://127.0.0.1:6161");
+
+    using var connection =
+        factory.CreateConnection("admin", "admin");
+
+    connection.Start();
+
+    Console.WriteLine("Подключение успешно!");
+}
+catch (Exception ex)
+{
+    Console.WriteLine(ex.ToString());
+}
+
+using System;
 using System.IO;
 using System.Text;
 using Apache.NMS;
