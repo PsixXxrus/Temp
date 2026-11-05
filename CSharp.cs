@@ -1,4 +1,35 @@
 
+using System;
+using Apache.NMS.ActiveMQ.OpenWire;
+
+var assembly = typeof(OpenWireFormat).Assembly;
+
+Console.WriteLine($"DLL: {assembly.Location}");
+
+foreach (int version in new[] { 1, 10 })
+{
+    string typeName =
+        $"Apache.NMS.ActiveMQ.OpenWire.V{version}.MarshallerFactory";
+
+    Type? type = assembly.GetType(typeName, false);
+
+    Console.WriteLine(
+        $"OpenWire V{version}: {(type != null ? "OK" : "NOT FOUND")}");
+}
+
+try
+{
+    var wireFormat = new OpenWireFormat();
+    Console.WriteLine("OpenWireFormat создан успешно");
+}
+catch (Exception ex)
+{
+    Console.WriteLine("Ошибка OpenWireFormat:");
+    Console.WriteLine(ex.ToString());
+}
+
+
+
 using Apache.NMS.ActiveMQ.Transport;
 using Apache.NMS.ActiveMQ.Transport.Tcp;
 
