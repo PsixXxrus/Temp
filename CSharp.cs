@@ -1,4 +1,53 @@
 
+using Apache.NMS.ActiveMQ.Transport;
+using Apache.NMS.ActiveMQ.Transport.Tcp;
+
+// Проверяем реально загруженную DLL
+var tcpType = typeof(TcpTransportFactory);
+
+Console.WriteLine($"DLL: {tcpType.Assembly.Location}");
+Console.WriteLine($"Assembly: {tcpType.Assembly.FullName}");
+
+var ctor = tcpType.GetConstructor(Type.EmptyTypes);
+
+Console.WriteLine(
+    $"Публичный конструктор без параметров: {ctor != null}");
+
+if (ctor == null)
+{
+    throw new InvalidOperationException(
+        "В загруженной DLL отсутствует конструктор TcpTransportFactory()");
+}
+
+// Явный вызов сохраняет зависимость от конструктора
+var tcpFactory = new TcpTransportFactory();
+
+// Проверяем создание через reflection
+var reflectedFactory = Activator.CreateInstance(tcpType);
+
+Console.WriteLine("Reflection работает");
+
+// Регистрируем TCP
+new TransportFactory().RegisterTransportFactory(
+    "tcp",
+    tcpType);
+
+// Подключаемся к существующему OpenWire
+var factory = new Apache.NMS.ActiveMQ.ConnectionFactory(
+    "tcp://127.0.0.1:6161");
+
+using var connection = factory.CreateConnection(
+    "admin",
+    "admin");
+
+connection.Start();
+
+GC.KeepAlive(tcpFactory);
+
+Console.WriteLine("Подключение успешно!");
+
+
+
 using System;
 using Apache.NMS.ActiveMQ;
 
