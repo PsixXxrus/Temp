@@ -1,5 +1,92 @@
 
 using System;
+using System.IO;
+using System.Linq;
+using System.Xml.Linq;
+
+Console.Write("Укажите путь к XML-файлу: ");
+string inputPath = Console.ReadLine()?.Trim().Trim('"') ?? "";
+
+if (!File.Exists(inputPath))
+{
+    Console.WriteLine("Файл не найден!");
+    return;
+}
+
+// Загружаем XML
+XDocument doc = XDocument.Load(inputPath, LoadOptions.PreserveWhitespace);
+
+// Находим раздел operations
+var operations = doc.Descendants()
+    .FirstOrDefault(x => x.Name.LocalName == "operations");
+
+if (operations == null)
+{
+    Console.WriteLine("Элемент operations не найден!");
+    return;
+}
+
+// Получение значения элемента
+string GetValue(XElement operation, string name)
+{
+    return operation.Elements()
+        .FirstOrDefault(x => x.Name.LocalName == name)?
+        .Value.Trim() ?? "";
+}
+
+// Получаем все операции
+var allOperations = operations.Elements()
+    .Where(x => x.Name.LocalName == "Operation")
+    .ToList();
+
+int removed = 0;
+
+foreach (var operation in allOperations)
+{
+    string operationType = GetValue(operation, "operationType");
+    string payerAccount = GetValue(operation, "payerAccount");
+    string receiverINN = GetValue(operation, "receiverINN");
+    string receiverAccount = GetValue(operation, "receiverAccount");
+
+    // Проверяем условия
+    bool isValid =
+        operationType == "01" &&
+        payerAccount.StartsWith("40602810") &&
+        receiverINN.StartsWith("860000") &&
+        string.IsNullOrWhiteSpace(receiverAccount);
+
+    // Удаляем неподходящие операции
+    if (!isValid)
+    {
+        operation.Remove();
+        removed++;
+    }
+}
+
+// Формируем имя нового файла
+string directory = Path.GetDirectoryName(inputPath) ?? "";
+string fileName = Path.GetFileNameWithoutExtension(inputPath);
+string extension = Path.GetExtension(inputPath);
+
+string outputPath = Path.Combine(
+    directory,
+    fileName + "_new" + extension
+);
+
+// Сохраняем новый XML
+doc.Save(outputPath, SaveOptions.DisableFormatting);
+
+Console.WriteLine($"Всего операций: {allOperations.Count}");
+Console.WriteLine($"Удалено: {removed}");
+Console.WriteLine($"Оставлено: {allOperations.Count - removed}");
+Console.WriteLine($"Результат: {outputPath}");
+
+
+
+
+
+
+using System;
 using Apache.NMS.ActiveMQ.OpenWire;
 
 var assembly = typeof(OpenWireFormat).Assembly;
