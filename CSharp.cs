@@ -1,4 +1,110 @@
 
+<!-- Описание инструмента -->
+<div class="mb-4">
+
+    <div class="d-flex align-items-center gap-2 mb-3">
+        <i class="bi bi-file-earmark-code fs-4 text-primary"></i>
+        <h5 class="mb-0">
+            Обработка банковской выписки XML
+        </h5>
+    </div>
+
+    <p class="text-secondary mb-3">
+        Инструмент предназначен для автоматической фильтрации
+        операций банковской выписки по заданным параметрам.
+        Позволяет быстро выделить необходимые платежи из
+        большого количества транзакций без ручной обработки файла.
+    </p>
+
+    <!-- Условия фильтрации -->
+    <div class="bg-body-tertiary rounded-3 p-3 mb-3">
+
+        <h6 class="fw-semibold mb-2">
+            Условия отбора операций
+        </h6>
+
+        <p class="small text-secondary mb-3">
+            В итоговый XML-файл попадут только операции,
+            соответствующие всем перечисленным условиям:
+        </p>
+
+        <div class="table-responsive">
+            <table class="table table-sm table-borderless
+                          align-middle mb-0">
+
+                <tbody>
+                    <tr>
+                        <td class="text-secondary">
+                            Тип операции
+                        </td>
+                        <td class="fw-medium">
+                            <code>01</code>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td class="text-secondary">
+                            Счёт плательщика
+                        </td>
+                        <td class="fw-medium">
+                            Начинается с <code>40602810</code>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td class="text-secondary">
+                            ИНН получателя
+                        </td>
+                        <td class="fw-medium">
+                            Начинается с <code>860000</code>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td class="text-secondary">
+                            Счёт получателя
+                        </td>
+                        <td class="fw-medium">
+                            Пустой или отсутствует
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td class="text-secondary">
+                            Назначение платежа
+                        </td>
+                        <td class="fw-medium">
+                            Содержит <code>ДОГОВОР 200</code>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Информация о сохранении -->
+    <div class="alert alert-success d-flex
+                align-items-start gap-2 mb-0"
+         role="alert">
+
+        <div>
+            <strong>Исходный файл не изменяется</strong>
+
+            <div class="small mt-1">
+                После обработки создаётся отдельный XML-файл
+                с суффиксом <code>_new</code>.
+                Все неподходящие операции удаляются,
+                а структура выписки и остальные данные сохраняются.
+            </div>
+        </div>
+    </div>
+
+</div>
+
+
+
+
+
 @page "/xml-filter"
 @rendermode InteractiveServer
 
