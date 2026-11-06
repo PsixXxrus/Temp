@@ -1,4 +1,508 @@
 
+@page "/activemq-send"
+@rendermode InteractiveServer
+
+@using System.IO
+@using System.Linq
+@using System.Text
+@using System.Xml
+@using System.Xml.Linq
+@using Apache.NMS
+@using Apache.NMS.ActiveMQ
+@using Microsoft.AspNetCore.Components.Forms
+
+@inject IConfiguration Configuration
+
+<div class="container py-4">
+    <div class="card border-0 shadow-sm">
+
+        <!-- Заголовок -->
+        <div class="card-header bg-primary text-white p-4">
+            <h4 class="mb-2">
+                Отправка XML в ActiveMQ
+            </h4>
+
+            <p class="mb-3 opacity-75">
+                Загрузите XML-документы для передачи
+                в очередь сообщений ActiveMQ.
+                Каждый файл отправляется отдельным
+                текстовым сообщением.
+            </p>
+
+            <span class="badge bg-light text-primary me-2">
+                Очередь: @QueueName
+            </span>
+
+            <span class="badge bg-light text-primary">
+                Persistent
+            </span>
+        </div>
+
+        <div class="card-body p-4">
+
+            <!-- Описание -->
+            <div class="alert alert-light border mb-4">
+                <h6 class="fw-semibold">
+                    Как работает отправка?
+                </h6>
+
+                <p class="small text-secondary mb-0">
+                    Выберите один или несколько XML-файлов.
+                    Система прочитает их содержимое и
+                    проверит корректность XML.
+
+                    После нажатия кнопки отправки
+                    каждый документ будет передан
+                    в очередь ActiveMQ.
+
+                    По результатам отобразятся
+                    статусы и идентификаторы сообщений.
+                </p>
+            </div>
+
+            <!-- Загрузка -->
+            <div class="mb-4">
+
+                <label class="form-label fw-semibold">
+                    Выберите XML-файлы
+                </label>
+
+                <InputFile OnChange="SelectFiles"
+                           accept=".xml"
+                           multiple
+                           disabled="@isBusy"
+                           class="form-control" />
+
+                <div class="form-text">
+                    До 5 файлов, размер каждого — не более 10 МБ.
+                    Поддерживается одновременный выбор файлов.
+                </div>
+
+            </div>
+
+            @if (isBusy)
+            {
+                <div class="alert alert-info">
+                    <span class="spinner-border spinner-border-sm me-2">
+                    </span>
+                    Выполняется обработка...
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(error))
+            {
+                <div class="alert alert-danger">
+                    @error
+                </div>
+            }
+
+            <!-- Список файлов -->
+            @if (files.Count > 0)
+            {
+                <div class="mb-4">
+
+                    <h6 class="fw-semibold mb-3">
+                        Выбранные файлы
+                        <span class="badge bg-secondary">
+                            @files.Count
+                        </span>
+                    </h6>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Файл</th>
+                                    <th>Размер</th>
+                                    <th>Статус</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                @foreach (var file in files)
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="fw-medium">
+                                                @file.Name
+                                            </div>
+
+                                            @if (!string.IsNullOrEmpty(file.MessageId))
+                                            {
+                                                <div class="small text-muted text-break">
+                                                    ID: @file.MessageId
+                                                </div>
+                                            }
+
+                                            @if (!string.IsNullOrEmpty(file.Error))
+                                            {
+                                                <div class="small text-danger">
+                                                    @file.Error
+                                                </div>
+                                            }
+                                        </td>
+
+                                        <td>
+                                            @FormatSize(file.Size)
+                                        </td>
+
+                                        <td>
+                                            <span class="badge @GetBadgeClass(file.Status)">
+                                                @GetStatusText(file.Status)
+                                            </span>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+
+                        </table>
+                    </div>
+
+                </div>
+            }
+
+            <!-- Отправка -->
+            <div class="d-flex flex-wrap gap-2">
+
+                <button type="button"
+                        class="btn btn-primary px-4"
+                        disabled="@(!CanSend)"
+                        @onclick="SendFiles">
+
+                    @if (isBusy)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2">
+                        </span>
+                    }
+
+                    @(files.Any(f => f.Status == FileStatus.Failed)
+                        ? "Повторить отправку"
+                        : "Отправить в ActiveMQ")
+                </button>
+
+            </div>
+
+            <!-- Результат -->
+            @if (sendAttempted)
+            {
+                <div class="alert @(FailedCount == 0 ? "alert-success" : "alert-warning") mt-4 mb-0">
+
+                    <h6 class="fw-semibold">
+                        Результат отправки
+                    </h6>
+
+                    <div>
+                        Успешно отправлено:
+                        <strong>@SentCount</strong>
+                    </div>
+
+                    <div>
+                        Ошибок отправки:
+                        <strong>@FailedCount</strong>
+                    </div>
+
+                    <div>
+                        Очередь:
+                        <strong>@QueueName</strong>
+                    </div>
+
+                </div>
+            }
+
+        </div>
+    </div>
+</div>
+
+@code {
+
+    private const long MaxFileSize = 10 * 1024 * 1024;
+    private const int MaxFiles = 5;
+
+    private readonly List<UploadedXml> files = new();
+
+    private bool isBusy;
+    private bool sendAttempted;
+    private string error = "";
+
+    private string QueueName =>
+        Configuration["ActiveMq:QueueName"] ?? "correqts_out";
+
+    private bool CanSend =>
+        !isBusy &&
+        files.Any(f => f.Status == FileStatus.Ready ||
+                       f.Status == FileStatus.Failed);
+
+    private int SentCount =>
+        files.Count(f => f.Status == FileStatus.Sent);
+
+    private int FailedCount =>
+        files.Count(f => f.Status == FileStatus.Failed);
+
+    // Модель загруженного файла
+    private class UploadedXml
+    {
+        public string Name { get; set; } = "";
+        public long Size { get; set; }
+        public string Content { get; set; } = "";
+        public FileStatus Status { get; set; } = FileStatus.Ready;
+        public string? MessageId { get; set; }
+        public string? Error { get; set; }
+    }
+
+    private enum FileStatus
+    {
+        Ready,
+        Invalid,
+        Sent,
+        Failed
+    }
+
+    private record SendResult(
+        UploadedXml File,
+        bool Success,
+        string? MessageId,
+        string? Error
+    );
+
+    // 1. ЗАГРУЗКА ФАЙЛОВ
+    private async Task SelectFiles(InputFileChangeEventArgs e)
+    {
+        files.Clear();
+        error = "";
+        sendAttempted = false;
+        isBusy = true;
+
+        try
+        {
+            foreach (var file in e.GetMultipleFiles(MaxFiles))
+            {
+                var item = new UploadedXml
+                {
+                    Name = Path.GetFileName(file.Name),
+                    Size = file.Size
+                };
+
+                files.Add(item);
+
+                try
+                {
+                    if (!Path.GetExtension(file.Name)
+                        .Equals(".xml", StringComparison.OrdinalIgnoreCase))
+                    {
+                        throw new Exception("Допускаются только XML-файлы.");
+                    }
+
+                    if (file.Size > MaxFileSize)
+                    {
+                        throw new Exception("Размер превышает 10 МБ.");
+                    }
+
+                    // Читаем содержимое файла
+                    await using var stream =
+                        file.OpenReadStream(MaxFileSize);
+
+                    using var reader = new StreamReader(
+                        stream,
+                        new UTF8Encoding(false, true),
+                        detectEncodingFromByteOrderMarks: true);
+
+                    string xml = await reader.ReadToEndAsync();
+
+                    // Проверяем корректность XML
+                    var settings = new XmlReaderSettings
+                    {
+                        DtdProcessing = DtdProcessing.Prohibit,
+                        XmlResolver = null
+                    };
+
+                    using var xmlReader = XmlReader.Create(
+                        new StringReader(xml),
+                        settings);
+
+                    XDocument.Load(xmlReader);
+
+                    // Сохраняем оригинальный XML-текст
+                    item.Content = xml;
+                    item.Status = FileStatus.Ready;
+                }
+                catch (Exception ex)
+                {
+                    item.Status = FileStatus.Invalid;
+                    item.Error = ex.Message;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            error = "Ошибка выбора файлов: " + ex.Message;
+        }
+        finally
+        {
+            isBusy = false;
+        }
+    }
+
+    // 2. ОТПРАВКА ФАЙЛОВ
+    private async Task SendFiles()
+    {
+        if (!CanSend)
+            return;
+
+        isBusy = true;
+        error = "";
+        sendAttempted = true;
+
+        var batch = files
+            .Where(f => f.Status == FileStatus.Ready ||
+                        f.Status == FileStatus.Failed)
+            .ToList();
+
+        try
+        {
+            // Синхронный API ActiveMQ запускаем
+            // вне потока обработки интерфейса.
+            var results = await Task.Run(() => SendBatch(batch));
+
+            foreach (var result in results)
+            {
+                result.File.MessageId = result.MessageId;
+                result.File.Error = result.Error;
+
+                result.File.Status = result.Success
+                    ? FileStatus.Sent
+                    : FileStatus.Failed;
+            }
+        }
+        catch (Exception ex)
+        {
+            error = "Ошибка подключения к ActiveMQ: " + ex.Message;
+
+            foreach (var file in batch)
+            {
+                file.Status = FileStatus.Failed;
+                file.Error = "Сообщение не отправлено.";
+            }
+        }
+        finally
+        {
+            isBusy = false;
+        }
+    }
+
+    // 3. ПОДКЛЮЧЕНИЕ К ACTIVEMQ
+    private List<SendResult> SendBatch(List<UploadedXml> batch)
+    {
+        string brokerUrl =
+            Configuration["ActiveMq:BrokerUrl"]
+            ?? throw new Exception("Не указан BrokerUrl.");
+
+        string username =
+            Configuration["ActiveMq:Username"]
+            ?? throw new Exception("Не указан Username.");
+
+        string password =
+            Configuration["ActiveMq:Password"]
+            ?? throw new Exception("Не указан Password.");
+
+        string queueName =
+            Configuration["ActiveMq:QueueName"]
+            ?? throw new Exception("Не указан QueueName.");
+
+        var results = new List<SendResult>();
+
+        var factory = new ConnectionFactory(brokerUrl);
+
+        using IConnection connection =
+            factory.CreateConnection(username, password);
+
+        connection.Start();
+
+        using ISession session =
+            connection.CreateSession(
+                AcknowledgementMode.AutoAcknowledge);
+
+        IQueue queue = session.GetQueue(queueName);
+
+        using IMessageProducer producer =
+            session.CreateProducer(queue);
+
+        producer.DeliveryMode = MsgDeliveryMode.Persistent;
+
+        // Каждый XML отправляем отдельным сообщением
+        foreach (var file in batch)
+        {
+            try
+            {
+                ITextMessage message =
+                    session.CreateTextMessage(file.Content);
+
+                producer.Send(message);
+
+                results.Add(new SendResult(
+                    file,
+                    true,
+                    message.NMSMessageId,
+                    null));
+            }
+            catch (Exception ex)
+            {
+                results.Add(new SendResult(
+                    file,
+                    false,
+                    null,
+                    ex.Message));
+            }
+        }
+
+        return results;
+    }
+
+    // 4. ОФОРМЛЕНИЕ
+    private static string FormatSize(long bytes)
+    {
+        return $"{bytes / 1024.0:N1} КБ";
+    }
+
+    private static string GetBadgeClass(FileStatus status)
+    {
+        return status switch
+        {
+            FileStatus.Ready => "bg-secondary",
+            FileStatus.Invalid => "bg-danger",
+            FileStatus.Sent => "bg-success",
+            FileStatus.Failed => "bg-danger",
+            _ => "bg-secondary"
+        };
+    }
+
+    private static string GetStatusText(FileStatus status)
+    {
+        return status switch
+        {
+            FileStatus.Ready => "Готов",
+            FileStatus.Invalid => "Некорректный",
+            FileStatus.Sent => "Отправлен",
+            FileStatus.Failed => "Ошибка",
+            _ => "Неизвестно"
+        };
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 <!-- Описание инструмента -->
 <div class="mb-4">
 
