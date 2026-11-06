@@ -1,4 +1,395 @@
 
+@page "/xml-filter"
+@rendermode InteractiveServer
+
+@using System.IO
+@using System.Linq
+@using System.Xml.Linq
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.JSInterop
+
+@inject IJSRuntime JS
+
+<div class="container py-4">
+    <div class="card shadow-sm">
+        <div class="card-body">
+
+            <h5 class="card-title mb-4">
+                Фильтрация XML-операций
+            </h5>
+
+            <!-- Загрузка XML -->
+            <div class="mb-3">
+                <label class="form-label fw-semibold">
+                    Выберите XML-файл
+                </label>
+
+                <InputFile OnChange="UploadFile"
+                           accept=".xml"
+                           class="form-control" />
+            </div>
+
+            @if (isLoading)
+            {
+                <div class="alert alert-info">
+                    Чтение и анализ XML-файла...
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(error))
+            {
+                <div class="alert alert-danger">
+                    @error
+                </div>
+            }
+
+            <!-- Статистика после загрузки -->
+            @if (sourceDocument != null)
+            {
+                <div class="mb-3 text-muted small">
+                    Файл: @fileName
+                </div>
+
+                <div class="row g-3 mb-4">
+
+                    <div class="col-md-4">
+                        <div class="border rounded p-3 text-center">
+                            <div class="text-muted small">
+                                Всего операций
+                            </div>
+                            <h3>@totalCount</h3>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="border rounded p-3 text-center">
+                            <div class="text-muted small">
+                                Подходят
+                            </div>
+                            <h3 class="text-success">
+                                @validCount
+                            </h3>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="border rounded p-3 text-center">
+                            <div class="text-muted small">
+                                Не подходят
+                            </div>
+                            <h3 class="text-danger">
+                                @(totalCount - validCount)
+                            </h3>
+                        </div>
+                    </div>
+
+                </div>
+            }
+
+            <!-- Кнопки -->
+            <div class="d-flex gap-2">
+
+                <button class="btn btn-primary"
+                        disabled="@(sourceDocument == null || isLoading)"
+                        @onclick="ConvertXml">
+                    Преобразовать
+                </button>
+
+                <button class="btn btn-success"
+                        disabled="@(resultBytes == null || isLoading)"
+                        @onclick="DownloadXml">
+                    Скачать
+                </button>
+
+            </div>
+
+            <!-- Результат преобразования -->
+            @if (resultBytes != null)
+            {
+                <div class="alert alert-success mt-4 mb-0">
+                    <strong>XML успешно преобразован!</strong>
+
+                    <div class="mt-2">
+                        Всего операций: @totalCount
+                    </div>
+                    <div>
+                        Удалено: @removedCount
+                    </div>
+                    <div>
+                        Оставлено: @validCount
+                    </div>
+                    <div class="mt-2">
+                        Новый файл: <b>@outputFileName</b>
+                    </div>
+                </div>
+            }
+
+        </div>
+    </div>
+</div>
+
+@code {
+
+    // Максимальный размер файла: 20 МБ
+    private const long MaxFileSize = 20 * 1024 * 1024;
+
+    private XDocument? sourceDocument;
+    private byte[]? resultBytes;
+
+    private string fileName = "";
+    private string outputFileName = "";
+    private string error = "";
+
+    private int totalCount = 0;
+    private int validCount = 0;
+    private int removedCount = 0;
+
+    private bool isLoading = false;
+
+    // 1. ЗАГРУЗКА И АНАЛИЗ XML
+    private async Task UploadFile(InputFileChangeEventArgs e)
+    {
+        sourceDocument = null;
+        resultBytes = null;
+
+        totalCount = 0;
+        validCount = 0;
+        removedCount = 0;
+
+        error = "";
+        fileName = "";
+        outputFileName = "";
+
+        isLoading = true;
+
+        try
+        {
+            var file = e.File;
+
+            fileName = Path.GetFileName(file.Name);
+
+            outputFileName =
+                Path.GetFileNameWithoutExtension(fileName)
+                + "_new"
+                + Path.GetExtension(fileName);
+
+            await using var stream =
+                file.OpenReadStream(MaxFileSize);
+
+            sourceDocument = await XDocument.LoadAsync(
+                stream,
+                LoadOptions.PreserveWhitespace,
+                CancellationToken.None);
+
+            bool hasOperations = sourceDocument
+                .Descendants()
+                .Any(x => x.Name.LocalName == "operations");
+
+            if (!hasOperations)
+                throw new Exception("Раздел operations не найден.");
+
+            // Находим все операции
+            var operations = GetOperations(sourceDocument);
+
+            totalCount = operations.Count;
+
+            // Считаем совпадения, ничего не удаляем
+            validCount = operations.Count(IsValid);
+        }
+        catch (Exception ex)
+        {
+            sourceDocument = null;
+            error = "Ошибка чтения XML: " + ex.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    // 2. ПОЛУЧЕНИЕ ВСЕХ OPERATION
+    private static List<XElement> GetOperations(XDocument doc)
+    {
+        return doc.Descendants()
+            .Where(x => x.Name.LocalName == "operations")
+            .SelectMany(x => x.Elements()
+                .Where(o => o.Name.LocalName == "Operation"))
+            .ToList();
+    }
+
+    // 3. ПОЛУЧЕНИЕ ЗНАЧЕНИЯ ТЕГА
+    private static string GetValue(XElement operation, string name)
+    {
+        return operation.Elements()
+            .FirstOrDefault(x => x.Name.LocalName == name)?
+            .Value.Trim() ?? "";
+    }
+
+    // 4. ПРОВЕРКА УСЛОВИЙ ФИЛЬТРАЦИИ
+    private static bool IsValid(XElement operation)
+    {
+        string operationType =
+            GetValue(operation, "operationType");
+
+        string payerAccount =
+            GetValue(operation, "payerAccount");
+
+        string receiverINN =
+            GetValue(operation, "receiverINN");
+
+        string receiverAccount =
+            GetValue(operation, "receiverAccount");
+
+        return
+            operationType == "01" &&
+            payerAccount.StartsWith("40602810") &&
+            receiverINN.StartsWith("860000") &&
+            string.IsNullOrWhiteSpace(receiverAccount);
+    }
+
+    // 5. ПРЕОБРАЗОВАНИЕ XML
+    private void ConvertXml()
+    {
+        if (sourceDocument == null)
+            return;
+
+        // Создаём копию оригинального XML
+        var doc = new XDocument(sourceDocument);
+
+        var operations = GetOperations(doc);
+
+        removedCount = 0;
+
+        foreach (var operation in operations)
+        {
+            if (!IsValid(operation))
+            {
+                operation.Remove();
+                removedCount++;
+            }
+        }
+
+        // Сохраняем результат в память
+        using var memoryStream = new MemoryStream();
+
+        doc.Save(
+            memoryStream,
+            SaveOptions.DisableFormatting);
+
+        resultBytes = memoryStream.ToArray();
+    }
+
+    // 6. СКАЧИВАНИЕ НОВОГО XML
+    private async Task DownloadXml()
+    {
+        if (resultBytes == null)
+            return;
+
+        using var stream = new MemoryStream(resultBytes);
+
+        using var streamRef =
+            new DotNetStreamReference(stream);
+
+        var module = await JS.InvokeAsync<IJSObjectReference>(
+            "import", "./js/xmlDownload.js");
+
+        try
+        {
+            await module.InvokeVoidAsync(
+                "downloadFileFromStream",
+                outputFileName,
+                streamRef);
+        }
+        finally
+        {
+            await module.DisposeAsync();
+        }
+    }
+}
+
+
+
+export async function downloadFileFromStream(fileName, streamReference) {
+    const arrayBuffer = await streamReference.arrayBuffer();
+
+    const blob = new Blob([arrayBuffer], {
+        type: "application/xml"
+    });
+
+    const url = URL.createObjectURL(blob);
+
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = fileName;
+
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+
+    URL.revokeObjectURL(url);
+}
+
+
+
+private static bool IsValid(XElement operation)
+{
+    string operationType =
+        GetValue(operation, "operationType");
+
+    string payerAccount =
+        GetValue(operation, "payerAccount");
+
+    string receiverINN =
+        GetValue(operation, "receiverINN");
+
+    string receiverAccount =
+        GetValue(operation, "receiverAccount");
+
+    string paymentPurpose =
+        GetValue(operation, "paymentPurpose");
+
+    return
+        operationType == "01" &&
+        payerAccount.StartsWith("40602810") &&
+        receiverINN.StartsWith("860000") &&
+        string.IsNullOrWhiteSpace(receiverAccount) &&
+        paymentPurpose.Contains(
+            "ДОГОВОР 200",
+            StringComparison.OrdinalIgnoreCase);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 using System;
 using System.IO;
 using System.Linq;
